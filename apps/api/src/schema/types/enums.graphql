@@ -1,0 +1,16 @@
+enum ProductStatus {
+  ACTIVE
+  DISCONTINUED
+  OUT_OF_STOCK
+}
+
+enum UserRole {
+  PUBLIC
+  USER
+  ADMIN
+}
+
+enum SortOrder {
+  ASC
+  DESC
+}

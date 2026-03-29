@@ -1,0 +1,26 @@
+mutation CreateBrand($input: CreateBrandInput!) {
+  createBrand(input: $input) {
+    id
+    name
+    slug
+  }
+}
+
+mutation CreateProduct($input: CreateProductInput!) {
+  createProduct(input: $input) {
+    id
+    name
+    stock
+    status
+  }
+}
+
+mutation CreateReview($input: CreateReviewInput!) {
+  createReview(input: $input) {
+    id
+    rating
+    comment
+    productId
+    userId
+  }
+}

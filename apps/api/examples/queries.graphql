@@ -1,0 +1,41 @@
+query GetProducts($limit: Int, $offset: Int) {
+  products(limit: $limit, offset: $offset, sortBy: "created_at", sortOrder: DESC) {
+    id
+    name
+    slug
+    price
+    stock
+    status
+    avgRating
+    reviewCount
+    brand {
+      id
+      name
+    }
+    category {
+      id
+      name
+    }
+  }
+}
+
+query GetProductById($id: ID!) {
+  product(id: $id) {
+    id
+    name
+    description
+    specs {
+      key
+      value
+      unit
+    }
+    reviews {
+      id
+      rating
+      comment
+      user {
+        username
+      }
+    }
+  }
+}

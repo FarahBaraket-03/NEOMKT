@@ -1,0 +1,44 @@
+query GetProducts(
+  $brandId: ID
+  $categoryId: ID
+  $status: ProductStatus
+  $minPrice: Float
+  $maxPrice: Float
+  $search: String
+  $sortBy: String
+  $sortOrder: SortOrder
+  $limit: Int
+  $offset: Int
+) {
+  products(
+    brandId: $brandId
+    categoryId: $categoryId
+    status: $status
+    minPrice: $minPrice
+    maxPrice: $maxPrice
+    search: $search
+    sortBy: $sortBy
+    sortOrder: $sortOrder
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    name
+    slug
+    price
+    stock
+    status
+    imageUrl
+    avgRating
+    reviewCount
+    brand {
+      id
+      name
+    }
+    category {
+      id
+      name
+      slug
+    }
+  }
+}

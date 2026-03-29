@@ -1,0 +1,11 @@
+schema: ../api/src/schema/**/*.graphql
+documents: src/gql/**/*.graphql
+generates:
+  src/gql/__generated__/typed.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typed-document-node
+    config:
+      avoidOptionals: true
+      enumsAsTypes: true

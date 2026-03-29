@@ -1,0 +1,12 @@
+type Subscription {
+  productUpdated: Product!
+  productStockChanged(productId: ID): Product!
+  priceUpdated(productId: ID): PriceUpdatedPayload!
+  reviewAdded(productId: ID!): Review!
+}
+
+type PriceUpdatedPayload {
+  oldPrice: Float!
+  newPrice: Float!
+  product: Product!
+}

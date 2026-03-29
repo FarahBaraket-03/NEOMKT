@@ -1,0 +1,41 @@
+subscription OnProductUpdated {
+  productUpdated {
+    id
+    name
+    stock
+    updatedAt
+  }
+}
+
+subscription OnStockChanged($productId: ID!) {
+  productStockChanged(productId: $productId) {
+    id
+    stock
+    status
+  }
+}
+
+subscription OnPriceUpdated {
+  priceUpdated {
+    oldPrice
+    newPrice
+    product {
+      id
+      name
+      price
+      updatedAt
+    }
+  }
+}
+
+subscription OnReviewAdded($productId: ID!) {
+  reviewAdded(productId: $productId) {
+    id
+    productId
+    rating
+    comment
+    user {
+      username
+    }
+  }
+}

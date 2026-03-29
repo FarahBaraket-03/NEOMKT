@@ -1,0 +1,53 @@
+query GetBrands {
+  brands {
+    id
+    name
+    slug
+    country
+    foundedYear
+    logoUrl
+    products {
+      id
+    }
+  }
+}
+
+query GetCategories {
+  categories {
+    id
+    name
+    slug
+    icon
+    products {
+      id
+    }
+  }
+}
+
+query GetHomeStats {
+  productsCount
+  brands {
+    id
+  }
+  categories {
+    id
+  }
+}
+
+query GetFeaturedProducts {
+  products(limit: 6, sortBy: "created_at", sortOrder: DESC) {
+    id
+    name
+    slug
+    price
+    stock
+    status
+    imageUrl
+    avgRating
+    reviewCount
+    brand {
+      id
+      name
+    }
+  }
+}

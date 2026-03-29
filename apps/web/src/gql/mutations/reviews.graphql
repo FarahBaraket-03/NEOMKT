@@ -1,0 +1,29 @@
+mutation CreateReview($input: CreateReviewInput!) {
+  createReview(input: $input) {
+    id
+    productId
+    rating
+    title
+    comment
+    isVerified
+    createdAt
+    user {
+      id
+      username
+    }
+  }
+}
+
+mutation UpdateReview($id: ID!, $input: UpdateReviewInput!) {
+  updateReview(id: $id, input: $input) {
+    id
+    rating
+    title
+    comment
+    updatedAt
+  }
+}
+
+mutation DeleteReview($id: ID!) {
+  deleteReview(id: $id)
+}

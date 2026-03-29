@@ -1,0 +1,55 @@
+
+/documentation
+/artifact
+/ExempleDesign
+
+/specs
+
+/supabase/csv
+
+# Ignore environment files and local secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+!.env.sample
+!**/.env.sample
+*/*/.env
+*/*/*/.env
+
+# Ignore Python bytecode and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+**/venv/
+
+# Ignore logs
+logs/
+**/logs/
+*.log
+
+# Ignore dependencies
+node_modules/
+**/node_modules/
+
+# Ignore Next.js build outputs
+.next/
+**/.next/
+
+# Ignore editor settings
+.vscode/
+**/.vscode/
+
+# Ignore build artifacts
+dist/
+build/
+out/
+**/dist/
+**/build/
+**/out/
+
+
+.github/

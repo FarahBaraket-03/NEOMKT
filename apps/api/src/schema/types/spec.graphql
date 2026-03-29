@@ -1,0 +1,33 @@
+type ProductSpec {
+  id: ID!
+  productId: ID!
+  key: String!
+  value: String!
+  unit: String
+  displayOrder: Int!
+}
+
+input CreateProductSpecInput {
+  productId: ID!
+  key: String!
+  value: String!
+  unit: String
+  displayOrder: Int
+}
+
+input UpdateProductSpecInput {
+  key: String
+  value: String
+  unit: String
+  displayOrder: Int
+}
+
+extend type Query {
+  productSpecs(productId: ID!): [ProductSpec!]!
+}
+
+extend type Mutation {
+  createProductSpec(input: CreateProductSpecInput!): ProductSpec!
+  updateProductSpec(id: ID!, input: UpdateProductSpecInput!): ProductSpec!
+  deleteProductSpec(id: ID!): Boolean!
+}

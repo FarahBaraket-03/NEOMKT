@@ -1,0 +1,74 @@
+type Product {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  stock: Int!
+  status: ProductStatus!
+  brandId: ID!
+  brand: Brand!
+  categoryId: ID!
+  category: Category!
+  imageUrl: String
+  images: [String!]!
+  releaseDate: DateTime
+  specs(limit: Int = 20, offset: Int = 0): [ProductSpec!]!
+  reviews(limit: Int = 20, offset: Int = 0): [Review!]!
+  avgRating: Float!
+  reviewCount: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateProductInput {
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  stock: Int!
+  status: ProductStatus
+  brandId: ID!
+  categoryId: ID!
+  imageUrl: String
+  images: [String!]
+  releaseDate: DateTime
+}
+
+input UpdateProductInput {
+  name: String
+  slug: String
+  description: String
+  price: Float
+  stock: Int
+  status: ProductStatus
+  brandId: ID
+  categoryId: ID
+  imageUrl: String
+  images: [String!]
+  releaseDate: DateTime
+}
+
+extend type Query {
+  productsCount: Int!
+  lowStockProductsCount(threshold: Int = 10): Int!
+  products(
+    brandId: ID
+    categoryId: ID
+    status: ProductStatus
+    minPrice: Float
+    maxPrice: Float
+    search: String
+    sortBy: String
+    sortOrder: SortOrder
+    limit: Int = 20
+    offset: Int = 0
+  ): [Product!]!
+  product(id: ID!): Product
+}
+
+extend type Mutation {
+  createProduct(input: CreateProductInput!): Product!
+  updateProduct(id: ID!, input: UpdateProductInput!): Product!
+  deleteProduct(id: ID!): Boolean!
+}

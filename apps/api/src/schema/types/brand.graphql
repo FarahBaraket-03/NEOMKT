@@ -1,0 +1,44 @@
+type Brand {
+  id: ID!
+  name: String!
+  slug: String!
+  country: String
+  logoUrl: String
+  websiteUrl: String
+  foundedYear: Int
+  description: String
+  products: [Product!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateBrandInput {
+  name: String!
+  slug: String!
+  country: String
+  logoUrl: String
+  websiteUrl: String
+  foundedYear: Int
+  description: String
+}
+
+input UpdateBrandInput {
+  name: String
+  slug: String
+  country: String
+  logoUrl: String
+  websiteUrl: String
+  foundedYear: Int
+  description: String
+}
+
+type Query {
+  brands: [Brand!]!
+  brand(id: ID!): Brand
+}
+
+type Mutation {
+  createBrand(input: CreateBrandInput!): Brand!
+  updateBrand(id: ID!, input: UpdateBrandInput!): Brand!
+  deleteBrand(id: ID!): Boolean!
+}

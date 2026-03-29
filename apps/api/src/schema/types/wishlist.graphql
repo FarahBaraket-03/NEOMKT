@@ -1,0 +1,17 @@
+type WishlistItem {
+  id: ID!
+  userId: ID!
+  productId: ID!
+  product: Product!
+  addedAt: DateTime!
+}
+
+extend type Query {
+  wishlist: [WishlistItem!]!
+  isProductWishlisted(productId: ID!): Boolean!
+}
+
+extend type Mutation {
+  addToWishlist(productId: ID!): WishlistItem!
+  removeFromWishlist(productId: ID!): Boolean!
+}

@@ -1,0 +1,82 @@
+subscription ProductUpdated {
+  productUpdated {
+    id
+    name
+    slug
+    price
+    stock
+    status
+    brand {
+      id
+      name
+    }
+    category {
+      id
+      name
+      slug
+    }
+    updatedAt
+  }
+}
+
+subscription PriceUpdated {
+  priceUpdated {
+    oldPrice
+    newPrice
+    product {
+      id
+      name
+      slug
+      price
+      stock
+      status
+      brand {
+        id
+        name
+      }
+      category {
+        id
+        name
+        slug
+      }
+      updatedAt
+    }
+  }
+}
+
+subscription ProductStockChanged {
+  productStockChanged {
+    id
+    name
+    slug
+    price
+    stock
+    status
+    brand {
+      id
+      name
+    }
+    category {
+      id
+      name
+      slug
+    }
+    updatedAt
+  }
+}
+
+subscription ReviewAdded($productId: ID!) {
+  reviewAdded(productId: $productId) {
+    id
+    productId
+    rating
+    title
+    comment
+    isVerified
+    createdAt
+    user {
+      id
+      username
+    }
+  }
+}
