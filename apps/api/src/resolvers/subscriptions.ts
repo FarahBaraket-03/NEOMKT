@@ -7,6 +7,10 @@ interface ProductStockPayload {
   productStockChanged: { id: string };
 }
 
+interface ProductUpdatedPayload {
+  id: string;
+}
+
 interface PriceUpdatedPayload {
   priceUpdated: {
     oldPrice: number;
@@ -22,11 +26,15 @@ interface ReviewAddedPayload {
 export const subscriptionResolvers = {
   Subscription: {
     productUpdated: {
-      subscribe: (_parent: unknown, _args: unknown, ctx: GraphQLContext) => {
-        requireAuth(ctx);
-        return pubsub.asyncIterator(['PRODUCT_UPDATED']);
-      },
-      resolve: (payload: unknown) => payload,
+      subscribe: withFilter(
+        (_parent: unknown, _args: unknown, ctx: GraphQLContext) => {
+          requireAuth(ctx);
+          return pubsub.asyncIterator(['PRODUCT_UPDATED']);
+        },
+        (payload: ProductUpdatedPayload, variables: { productId?: string }) =>
+          !variables.productId || payload.id === variables.productId,
+      ),
+      resolve: (payload: ProductUpdatedPayload) => payload,
     },
     productStockChanged: {
       subscribe: withFilter(

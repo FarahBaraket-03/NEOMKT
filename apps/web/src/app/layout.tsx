@@ -12,6 +12,10 @@ export const metadata: Metadata = {
     template: '%s | NEOMKT',
   },
   description: 'Cyberpunk technology products catalog powered by GraphQL.',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

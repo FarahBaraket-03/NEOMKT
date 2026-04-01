@@ -1,5 +1,5 @@
 type Subscription {
-  productUpdated: Product!
+  productUpdated(productId: ID): Product!
   productStockChanged(productId: ID): Product!
   priceUpdated(productId: ID): PriceUpdatedPayload!
   reviewAdded(productId: ID!): Review!

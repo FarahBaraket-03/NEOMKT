@@ -39,9 +39,14 @@ function extractWsBearerToken(connectionParams: unknown): string | null {
 
   const asRecord = connectionParams as Record<string, unknown>;
 
-  const directAuthorization = asRecord.authorization;
+  const directAuthorization = asRecord.authorization ?? asRecord.Authorization;
   if (typeof directAuthorization === 'string') {
     return extractBearerTokenFromAuthorization(directAuthorization);
+  }
+
+  const directToken = asRecord.token ?? asRecord.accessToken;
+  if (typeof directToken === 'string' && directToken.trim().length > 0) {
+    return directToken.trim();
   }
 
   const headers = asRecord.headers;

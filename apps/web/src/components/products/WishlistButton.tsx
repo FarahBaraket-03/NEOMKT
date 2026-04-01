@@ -1,6 +1,7 @@
 'use client';
 
-import { useMutation, useQuery } from '@apollo/client';
+import { useEffect } from 'react';
+import { useMutation, useQuery, useSubscription } from '@apollo/client';
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -10,6 +11,7 @@ import {
   ADD_TO_WISHLIST,
   GET_USER_WISHLIST,
   IS_PRODUCT_WISHLISTED,
+  PRODUCT_UPDATED_SUBSCRIPTION,
   REMOVE_FROM_WISHLIST,
 } from '@/gql/documents';
 
@@ -30,6 +32,26 @@ export default function WishlistButton({ productId }: { productId: string }) {
     refetchQueries: [IS_PRODUCT_WISHLISTED, GET_USER_WISHLIST],
   });
 
+  const isWishlisted = Boolean(data?.isProductWishlisted);
+
+  const { data: productUpdateData } = useSubscription(PRODUCT_UPDATED_SUBSCRIPTION, {
+    variables: { productId },
+    skip: !user || !isWishlisted,
+  });
+
+  useEffect(() => {
+    const updatedProduct = productUpdateData?.productUpdated;
+    if (!updatedProduct || !isWishlisted) {
+      return;
+    }
+
+    pushToast({
+      title: 'WISHLIST LIVE SIGNAL',
+      description: `${updatedProduct.name} received an update.`,
+      variant: 'info',
+    });
+  }, [isWishlisted, productUpdateData, pushToast]);
+
   if (!user) {
     return (
       <Link href="/auth/login" className="w-full sm:w-1/3">
@@ -40,7 +62,6 @@ export default function WishlistButton({ productId }: { productId: string }) {
     );
   }
 
-  const isWishlisted = Boolean(data?.isProductWishlisted);
   const isMutating = isAdding || isRemoving || isLoadingWishlistState;
 
   const toggleWishlist = async () => {

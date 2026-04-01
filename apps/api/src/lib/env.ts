@@ -9,6 +9,7 @@ interface EnvConfig {
   JWT_SECRET: string;
   PORT: number;
   NODE_ENV: 'development' | 'test' | 'production';
+  GRAPHQL_INTROSPECTION: boolean;
 }
 
 function getEnvVar(name: keyof Omit<EnvConfig, 'PORT' | 'NODE_ENV'>): string {
@@ -38,14 +39,37 @@ function getPort(): number {
   return parsed;
 }
 
+function parseBooleanEnv(value: string | undefined, fallback: boolean): boolean {
+  if (value == null || value.trim().length === 0) {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on') {
+    return true;
+  }
+
+  if (normalized === 'false' || normalized === '0' || normalized === 'no' || normalized === 'off') {
+    return false;
+  }
+
+  throw new Error('Invalid GRAPHQL_INTROSPECTION. Expected a boolean-like value.');
+}
+
 export function validateEnv(): EnvConfig {
+  const nodeEnv = getNodeEnv();
+
   const config: EnvConfig = {
     SUPABASE_URL: getEnvVar('SUPABASE_URL'),
     SUPABASE_ANON_KEY: getEnvVar('SUPABASE_ANON_KEY'),
     SUPABASE_SERVICE_ROLE_KEY: getEnvVar('SUPABASE_SERVICE_ROLE_KEY'),
     JWT_SECRET: getEnvVar('JWT_SECRET'),
     PORT: getPort(),
-    NODE_ENV: getNodeEnv(),
+    NODE_ENV: nodeEnv,
+    GRAPHQL_INTROSPECTION: parseBooleanEnv(
+      process.env.GRAPHQL_INTROSPECTION,
+      true,
+    ),
   };
 
   if (

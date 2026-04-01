@@ -252,8 +252,8 @@ export const REMOVE_FROM_WISHLIST = gql`
 `;
 
 export const PRODUCT_UPDATED_SUBSCRIPTION = gql`
-  subscription ProductUpdated {
-    productUpdated {
+  subscription ProductUpdated($productId: ID) {
+    productUpdated(productId: $productId) {
       id
       name
       slug
@@ -275,8 +275,8 @@ export const PRODUCT_UPDATED_SUBSCRIPTION = gql`
 `;
 
 export const PRICE_UPDATED_SUBSCRIPTION = gql`
-  subscription PriceUpdated {
-    priceUpdated {
+  subscription PriceUpdated($productId: ID) {
+    priceUpdated(productId: $productId) {
       oldPrice
       newPrice
       product {
@@ -302,8 +302,8 @@ export const PRICE_UPDATED_SUBSCRIPTION = gql`
 `;
 
 export const PRODUCT_STOCK_CHANGED_SUBSCRIPTION = gql`
-  subscription ProductStockChanged {
-    productStockChanged {
+  subscription ProductStockChanged($productId: ID) {
+    productStockChanged(productId: $productId) {
       id
       name
       slug

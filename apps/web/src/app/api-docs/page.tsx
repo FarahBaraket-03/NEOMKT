@@ -1,28 +1,100 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Database, Zap, FileJson, Play, Activity, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Database, Zap, FileJson, Play, Activity, AlertCircle, Lock } from 'lucide-react';
+import { createClient } from 'graphql-ws';
 import PageContainer from '@/components/layout/PageContainer';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { getBrowserSupabaseClient } from '@/lib/auth/supabase';
 import { cn } from '@/lib/utils';
 
-type QueryType = 'getProduct' | 'listProducts' | 'getBrand' | 'aboutNeomkt';
+type QueryType =
+  | 'getProduct'
+  | 'listProducts'
+  | 'filterProducts'
+  | 'getBrand'
+  | 'aboutNeomkt'
+  | 'subscriptionProductUpdated'
+  | 'subscriptionProductStockChanged'
+  | 'subscriptionPriceUpdated'
+  | 'adminCreateBrandMutation'
+  | 'adminUpdateBrandMutation'
+  | 'adminDeleteBrandMutation';
+type UserRole = 'PUBLIC' | 'USER' | 'ADMIN';
+type OperationType = 'query' | 'mutation' | 'subscription';
+
+interface QueryDefinition {
+  label: string;
+  query: string;
+  doc: React.ReactNode;
+  requiresAdmin?: boolean;
+  requiresAuth?: boolean;
+  defaultVariables?: string;
+  operationType?: OperationType;
+}
 
 interface ErrorResponse {
   errors?: Array<{ message: string }>;
 }
 
+function formatSubscriptionError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return JSON.stringify(error, null, 2);
+}
+
+function deriveWsEndpoint(httpEndpoint: string): string {
+  const configuredWsEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_WS_URL;
+  if (configuredWsEndpoint) {
+    return configuredWsEndpoint;
+  }
+
+  try {
+    const url = new URL(httpEndpoint);
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    return url.toString();
+  } catch {
+    return 'ws://localhost:4000/graphql';
+  }
+}
+
+function normalizeRole(value: unknown): UserRole | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toUpperCase();
+  if (normalized === 'ADMIN' || normalized === 'USER' || normalized === 'PUBLIC') {
+    return normalized;
+  }
+
+  return null;
+}
+
 export default function ApiDocsPage() {
+  const defaultEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_HTTP_URL || 'http://localhost:4000/graphql';
+  const defaultWsEndpoint = deriveWsEndpoint(defaultEndpoint);
   const [activeQuery, setActiveQuery] = useState<QueryType>('aboutNeomkt');
   const [isExecuting, setIsExecuting] = useState(false);
+  const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [endpoint, setEndpoint] = useState('https://api.neomkt.net/graphql');
+  const [endpoint, setEndpoint] = useState(defaultEndpoint);
+  const [wsEndpoint] = useState(defaultWsEndpoint);
   const [queryText, setQueryText] = useState('');
   const [variables, setVariables] = useState('{}');
+  const [viewerRole, setViewerRole] = useState<UserRole>('PUBLIC');
+  const [isRoleLoading, setIsRoleLoading] = useState(true);
+  const subscriptionDisposeRef = useRef<(() => void) | null>(null);
 
-  const queries: Record<QueryType, { label: string, query: string, doc: React.ReactNode }> = {
+  const { user, session, isLoading: isAuthLoading } = useAuth();
+  const supabase = useMemo(() => getBrowserSupabaseClient(), []);
+
+  const queries: Record<QueryType, QueryDefinition> = {
     aboutNeomkt: {
       label: 'aboutNeomkt',
       query: `query GetProducts {\n  products(limit: 5) {\n    id\n    name\n    price\n    stock\n  }\n}`,
@@ -78,32 +150,314 @@ export default function ApiDocsPage() {
           </p>
         </>
       ),
-    }
+    },
+    filterProducts: {
+      label: 'filterProducts',
+      operationType: 'query',
+      query: `query FilterProducts($status: ProductStatus, $minPrice: Float, $maxPrice: Float, $search: String, $limit: Int) {\n  products(\n    status: $status\n    minPrice: $minPrice\n    maxPrice: $maxPrice\n    search: $search\n    sortBy: "price"\n    sortOrder: ASC\n    limit: $limit\n  ) {\n    id\n    name\n    price\n    stock\n    status\n  }\n}`,
+      defaultVariables: `{
+  "status": "ACTIVE",
+  "minPrice": 100,
+  "maxPrice": 3000,
+  "search": "pro",
+  "limit": 10
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">products(status, minPrice, maxPrice, search...): <span className="text-white">[Product]</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Filters the catalog by status, price range, and keyword search to test query arguments.
+          </p>
+        </>
+      ),
+    },
+    subscriptionProductUpdated: {
+      label: 'subscriptionProductUpdated',
+      operationType: 'subscription',
+      requiresAuth: true,
+      query: `subscription ProductUpdated($productId: ID) {\n  productUpdated(productId: $productId) {\n    id\n    name\n    slug\n    price\n    stock\n    status\n    updatedAt\n  }\n}`,
+      defaultVariables: `{
+  "productId": "replace-with-product-id-or-null"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Subscription</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">productUpdated(productId: ID): <span className="text-white">Product</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Streams product updates in real time. Use productId to listen to one specific product.
+          </p>
+        </>
+      ),
+    },
+    subscriptionProductStockChanged: {
+      label: 'subscriptionStockByProduct',
+      operationType: 'subscription',
+      requiresAuth: true,
+      query: `subscription ProductStockChanged($productId: ID) {\n  productStockChanged(productId: $productId) {\n    id\n    name\n    slug\n    stock\n    status\n    updatedAt\n  }\n}`,
+      defaultVariables: `{
+  "productId": "replace-with-product-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Subscription</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">productStockChanged(productId: ID): <span className="text-white">Product</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Real-time stock feed for a specific product (ideal for wishlist watch behavior).
+          </p>
+        </>
+      ),
+    },
+    subscriptionPriceUpdated: {
+      label: 'subscriptionPriceByProduct',
+      operationType: 'subscription',
+      requiresAuth: true,
+      query: `subscription PriceUpdated($productId: ID) {\n  priceUpdated(productId: $productId) {\n    oldPrice\n    newPrice\n    product {\n      id\n      name\n      slug\n      price\n      updatedAt\n    }\n  }\n}`,
+      defaultVariables: `{
+  "productId": "replace-with-product-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Subscription</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">priceUpdated(productId: ID): <span className="text-white">PriceUpdatedPayload</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Live price update stream with old/new price payload for one product.
+          </p>
+        </>
+      ),
+    },
+    adminCreateBrandMutation: {
+      label: 'adminCreateBrand',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminCreateBrand($input: CreateBrandInput!) {\n  createBrand(input: $input) {\n    id\n    name\n    slug\n    country\n  }\n}`,
+      defaultVariables: `{
+  "input": {
+    "name": "NEOMKT Admin Test Brand",
+    "slug": "neomkt-admin-test-brand-change-me",
+    "country": "JP",
+    "description": "Temporary mutation test from API docs"
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">createBrand(input: CreateBrandInput!): <span className="text-white">Brand</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Tests an administrative write operation. Normal users can inspect this mutation but cannot execute it.
+          </p>
+        </>
+      ),
+    },
+    adminUpdateBrandMutation: {
+      label: 'adminUpdateBrand',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminUpdateBrand($id: ID!, $input: UpdateBrandInput!) {\n  updateBrand(id: $id, input: $input) {\n    id\n    name\n    slug\n    country\n    description\n  }\n}`,
+      defaultVariables: `{
+  "id": "replace-with-brand-id",
+  "input": {
+    "name": "NEOMKT Updated Brand",
+    "description": "Updated from API docs mutation test"
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">updateBrand(id: ID!, input: UpdateBrandInput!): <span className="text-white">Brand</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Updates an existing brand by ID. Locked for normal users.
+          </p>
+        </>
+      ),
+    },
+    adminDeleteBrandMutation: {
+      label: 'adminDeleteBrand',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminDeleteBrand($id: ID!) {\n  deleteBrand(id: $id)\n}`,
+      defaultVariables: `{
+  "id": "replace-with-brand-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">deleteBrand(id: ID!): <span className="text-white">Boolean</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Deletes a brand by ID. This destructive mutation is locked for normal users.
+          </p>
+        </>
+      ),
+    },
   };
+
+  const selectedOperation = queries[activeQuery];
+  const isSubscriptionOperation = selectedOperation.operationType === 'subscription';
+  const isAuthRequired = Boolean(selectedOperation.requiresAuth || selectedOperation.requiresAdmin);
+  const isAuthenticationMissing = isAuthRequired && !session?.access_token;
+  const isMutationLocked = Boolean(selectedOperation.requiresAdmin) && viewerRole !== 'ADMIN';
+  const isSecurityStateLoading = isAuthLoading || isRoleLoading;
 
   // Initialize query text on component mount and when active query changes
   useEffect(() => {
     setQueryText(queries[activeQuery].query);
+    setVariables(queries[activeQuery].defaultVariables ?? '{}');
     setResponse(null);
     setError(null);
+
+    if (subscriptionDisposeRef.current) {
+      subscriptionDisposeRef.current();
+      subscriptionDisposeRef.current = null;
+      setIsSubscriptionActive(false);
+    }
   }, [activeQuery]);
 
-  // Set endpoint on initial load
-  useEffect(() => {
-    setEndpoint(process.env.NEXT_PUBLIC_GRAPHQL_HTTP_URL || 'http://localhost:4000/graphql');
+  useEffect(() => () => {
+    if (subscriptionDisposeRef.current) {
+      subscriptionDisposeRef.current();
+      subscriptionDisposeRef.current = null;
+    }
   }, []);
 
+  useEffect(() => {
+    let isCancelled = false;
+
+    const resolveViewerRole = async () => {
+      if (isAuthLoading) {
+        return;
+      }
+
+      if (!user) {
+        setViewerRole('PUBLIC');
+        setIsRoleLoading(false);
+        return;
+      }
+
+      setIsRoleLoading(true);
+
+      const fallbackRole = normalizeRole(user.app_metadata?.role)
+        ?? normalizeRole(user.user_metadata?.role)
+        ?? 'USER';
+
+      try {
+        const { data, error: roleError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle<{ role: UserRole }>();
+
+        if (isCancelled) {
+          return;
+        }
+
+        if (!roleError && data?.role) {
+          setViewerRole(data.role);
+        } else {
+          setViewerRole(fallbackRole);
+        }
+      } catch {
+        if (!isCancelled) {
+          setViewerRole(fallbackRole);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsRoleLoading(false);
+        }
+      }
+    };
+
+    void resolveViewerRole();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isAuthLoading, supabase, user]);
+
   const handleExecute = async () => {
+    if (isAuthenticationMissing) {
+      setError('Authentication required. Please log in before running this operation.');
+      return;
+    }
+
+    if (selectedOperation.requiresAdmin && viewerRole !== 'ADMIN') {
+      setError('This mutation is locked. Admin role required.');
+      return;
+    }
+
+    if (isSecurityStateLoading) {
+      setError('Please wait, validating your access level...');
+      return;
+    }
+
     setIsExecuting(true);
     setResponse(null);
     setError(null);
 
     try {
-      let parsedVariables = {};
+      let parsedVariables: Record<string, unknown> = {};
       try {
-        parsedVariables = JSON.parse(variables);
+        parsedVariables = JSON.parse(variables) as Record<string, unknown>;
       } catch {
         setError('Invalid JSON in variables');
+        setIsExecuting(false);
+        return;
+      }
+
+      if (isSubscriptionOperation) {
+        const wsClient = createClient({
+          url: wsEndpoint,
+          connectionParams: session?.access_token
+            ? {
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`,
+                },
+              }
+            : {},
+          shouldRetry: () => true,
+          retryAttempts: 3,
+        });
+
+        let eventCount = 0;
+
+        const dispose = wsClient.subscribe(
+          {
+            query: queryText,
+            variables: parsedVariables,
+          },
+          {
+            next: (payload) => {
+              eventCount += 1;
+              setResponse((previous) => {
+                const line = JSON.stringify(payload, null, 2);
+                if (!previous || previous.length === 0) {
+                  return `EVENT #${eventCount}\n${line}`;
+                }
+
+                return `${previous}\n\nEVENT #${eventCount}\n${line}`;
+              });
+            },
+            error: (subscriptionError) => {
+              setError(`Subscription Error: ${formatSubscriptionError(subscriptionError)}`);
+              setIsSubscriptionActive(false);
+            },
+            complete: () => {
+              setIsSubscriptionActive(false);
+            },
+          },
+        );
+
+        subscriptionDisposeRef.current = dispose;
+        setIsSubscriptionActive(true);
         setIsExecuting(false);
         return;
       }
@@ -117,6 +471,9 @@ export default function ApiDocsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
         },
         body: JSON.stringify(graphqlRequest),
       });
@@ -133,6 +490,16 @@ export default function ApiDocsPage() {
     } finally {
       setIsExecuting(false);
     }
+  };
+
+  const stopSubscription = () => {
+    if (!subscriptionDisposeRef.current) {
+      return;
+    }
+
+    subscriptionDisposeRef.current();
+    subscriptionDisposeRef.current = null;
+    setIsSubscriptionActive(false);
   };
 
   const syntaxHighlight = (text: string): string => {
@@ -168,6 +535,13 @@ export default function ApiDocsPage() {
             <span className="text-mutedForeground">ENDPOINT:</span>
             <span className="text-accent tracking-wider break-all">{endpoint}</span>
           </div>
+          {isSubscriptionOperation ? (
+            <div className="flex items-center gap-3 px-4 py-2 border border-accentTertiary/40 bg-accentTertiary/10 cyber-chamfer-sm text-xs font-mono">
+              <div className="w-2 h-2 rounded-full bg-accentTertiary animate-pulse" />
+              <span className="text-mutedForeground">WS_ENDPOINT:</span>
+              <span className="text-accentTertiary tracking-wider break-all">{wsEndpoint}</span>
+            </div>
+          ) : null}
         </div>
 
         {/* 3-Column Layout */}
@@ -188,13 +562,24 @@ export default function ApiDocsPage() {
                   <ul className="space-y-2">
                     {(Object.keys(queries) as QueryType[]).map((key) => (
                       <li key={key}>
+                        {queries[key].requiresAdmin ? (
+                          <div className="mb-1 flex items-center gap-2 px-3">
+                            <Lock className="w-3 h-3 text-destructive" />
+                            <span className="text-[10px] font-mono uppercase tracking-widest text-destructive/90">
+                              admin only
+                            </span>
+                          </div>
+                        ) : null}
                         <button
                           onClick={() => setActiveQuery(key)}
                           className={cn(
                             "w-full text-left px-3 py-2 font-mono text-sm tracking-widest transition-all",
                             activeQuery === key 
                               ? "bg-accent/10 border border-accent text-accent" 
-                              : "text-mutedForeground hover:text-white hover:bg-white/5 border border-transparent"
+                              : "text-mutedForeground hover:text-white hover:bg-white/5 border border-transparent",
+                            queries[key].requiresAdmin && viewerRole !== 'ADMIN'
+                              ? 'border-destructive/50 text-destructive/90'
+                              : undefined,
                           )}
                         >
                           {activeQuery === key && <span className="mr-2">&gt;</span>}
@@ -229,17 +614,51 @@ export default function ApiDocsPage() {
                   <h3 className="font-orbitron text-sm uppercase tracking-widest text-white">QUERY_EDITOR</h3>
                 </div>
                 <Button 
-                  onClick={handleExecute}
-                  disabled={isExecuting}
+                  onClick={isSubscriptionActive ? stopSubscription : handleExecute}
+                  disabled={(isExecuting && !isSubscriptionActive) || isMutationLocked || isSecurityStateLoading || isAuthenticationMissing}
                   className="h-8 px-6 bg-accent text-black font-bold font-mono tracking-widest hover:bg-white transition-all shadow-[0_0_10px_rgba(0,255,136,0.5)] border-none disabled:opacity-50"
                 >
-                  {isExecuting ? 'EXECUTING...' : 'EXECUTE'}
+                  {isSubscriptionActive
+                    ? 'STOP_LISTENING'
+                    : isExecuting
+                    ? 'EXECUTING...'
+                    : isSecurityStateLoading
+                      ? 'CHECKING_ACCESS...'
+                      : isAuthenticationMissing
+                        ? 'LOGIN_REQUIRED'
+                      : isMutationLocked
+                        ? 'ADMIN_LOCKED'
+                        : isSubscriptionOperation
+                          ? 'START_LISTENING'
+                          : 'EXECUTE'}
                 </Button>
               </CardHeader>
               <CardContent className="p-0 flex-1 flex flex-col w-full h-full pb-0 relative min-h-0">
+                {isAuthenticationMissing ? (
+                  <div className="border-b border-accentSecondary/30 bg-accentSecondary/10 px-4 py-2">
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-accentSecondary">
+                      Login required for this operation.
+                    </p>
+                  </div>
+                ) : null}
+                {isMutationLocked ? (
+                  <div className="border-b border-destructive/30 bg-destructive/10 px-4 py-2">
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-destructive">
+                      Mutation execution locked for non-admin users.
+                    </p>
+                  </div>
+                ) : null}
+                {isSubscriptionActive ? (
+                  <div className="border-b border-accentTertiary/30 bg-accentTertiary/10 px-4 py-2">
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-accentTertiary">
+                      Listening for live subscription events...
+                    </p>
+                  </div>
+                ) : null}
                 <textarea
                   value={queryText}
                   onChange={(e) => setQueryText(e.target.value)}
+                  readOnly={isMutationLocked || isSubscriptionActive}
                   className="flex-1 p-4 bg-black/40 text-white font-mono text-sm outline-none resize-none border-none focus:ring-0 whitespace-pre-wrap"
                   style={{ color: '#e2e8f0', caretColor: '#00ff88' }}
                   spellCheck="false"
@@ -252,6 +671,7 @@ export default function ApiDocsPage() {
                   <textarea
                     value={variables}
                     onChange={(e) => setVariables(e.target.value)}
+                    readOnly={isMutationLocked || isSubscriptionActive}
                     className="flex-1 p-4 bg-black/40 text-foreground/70 font-mono text-xs outline-none resize-none border-none focus:ring-0 overflow-y-auto"
                     style={{ caretColor: '#00ff88' }}
                     spellCheck="false"
