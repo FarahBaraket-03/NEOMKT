@@ -19,6 +19,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport = {
+  themeColor: '#090a0f',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   void warmupApi();
 

@@ -56,11 +56,11 @@ export default function FilterSidebar({
       className={cn(
         'lg:block',
         isMobileOpen
-          ? 'fixed inset-0 z-50 bg-background/90 p-4 overflow-auto'
-          : 'hidden lg:block',
+          ? 'fixed inset-0 z-50 bg-background/95 p-4 overflow-auto flex flex-col items-center py-8'
+          : 'hidden',
       )}
     >
-      <Card variant="terminal" className="h-fit max-w-sm w-full lg:max-w-none">
+      <Card variant="terminal" className="h-fit max-w-md w-full lg:max-w-none lg:w-auto">
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-orbitron uppercase text-xl text-accent">&gt;_ FILTERS</h3>

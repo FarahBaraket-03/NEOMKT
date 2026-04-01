@@ -84,7 +84,7 @@ export default function ProductsPage() {
       <div className="space-y-8 animate-in fade-in duration-500 py-8">
         <div className="border-b border-border pb-6">
           <h1 
-            className="text-5xl md:text-7xl font-black uppercase tracking-widest text-shadow-neon font-orbitron text-accent" 
+            className="text-3xl sm:text-5xl md:text-7xl font-black uppercase tracking-[0.1em] sm:tracking-widest text-shadow-neon font-orbitron text-accent break-words" 
           >
             CATALOG_FEED
           </h1>
@@ -146,7 +146,7 @@ export default function ProductsPage() {
           <div className="lg:hidden">
             <button
               type="button"
-              className="cyber-chamfer-sm border-2 border-accent bg-transparent px-4 py-2 font-mono text-sm uppercase tracking-wider text-accent hover:bg-accent hover:text-background hover:shadow-[var(--box-shadow-neon)] transition-all duration-150"
+              className="cyber-chamfer-sm border-2 border-accent bg-transparent px-4 py-3 w-full text-center font-mono text-sm uppercase tracking-wider text-accent hover:bg-accent hover:text-background hover:shadow-[var(--box-shadow-neon)] transition-all duration-150"
               onClick={() => setIsMobileFiltersOpen(true)}
             >
               OPEN_FILTERS &gt;

@@ -17,7 +17,7 @@ export default function BrandsPage() {
       <div className="space-y-8 animate-in fade-in duration-500">
         <div className="border-b border-border pb-6">
           <h1 
-            className="text-5xl md:text-7xl font-black uppercase tracking-widest text-shadow-neon font-orbitron text-accent" 
+            className="text-4xl sm:text-5xl md:text-7xl font-black uppercase tracking-[0.1em] sm:tracking-widest text-shadow-neon font-orbitron text-accent break-words" 
           >
             MEGACORPS_
           </h1>

@@ -22,7 +22,7 @@ export default function Hero() {
               <span className="font-mono text-[10px] uppercase tracking-widest text-accent">CATALOG_LIVE</span>
             </div>
             <h1
-              className="font-orbitron font-black uppercase text-6xl md:text-8xl lg:text-9xl text-white tracking-wider mb-4"
+              className="font-orbitron font-black uppercase text-5xl sm:text-6xl md:text-8xl lg:text-9xl text-white tracking-wider mb-4 break-words"
             >
               NEO<span className="text-white cyber-glitch" data-text="MKT">MKT</span>
             </h1>
@@ -42,10 +42,10 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="hidden lg:block relative z-10">
+        <div className="relative z-10 w-full max-w-sm mx-auto mt-12 lg:max-w-none lg:mx-0 lg:mt-0">
           {/* Decorative background circles */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 border border-accent/20 rounded-full" />
-          <div className="absolute -bottom-10 -left-10 w-24 h-24 border border-accentTertiary/20 rounded-full" />
+          <div className="absolute -top-10 -right-10 w-40 h-40 border border-accent/20 rounded-full hidden sm:block" />
+          <div className="absolute -bottom-10 -left-10 w-24 h-24 border border-accentTertiary/20 rounded-full hidden sm:block" />
           
           <Card variant="terminal" className="backdrop-blur-md bg-black/60 border-accent shadow-[var(--box-shadow-neon-sm)] relative">
             {/* Top-right decorative elements */}

@@ -140,7 +140,7 @@ export default async function ProductDetailPage({
           </div>
           
           <h1 
-            className="text-4xl md:text-6xl font-black uppercase tracking-widest text-shadow-neon font-orbitron text-accent" 
+            className="text-3xl sm:text-4xl md:text-6xl font-black uppercase tracking-[0.1em] sm:tracking-widest text-shadow-neon font-orbitron text-accent break-words" 
           >
             SYSTEM_DATA
           </h1>

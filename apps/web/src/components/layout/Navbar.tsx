@@ -145,11 +145,11 @@ export default function Navbar() {
       </PageContainer>
 
       {isOpen ? (
-        <div className="md:hidden fixed inset-0 bg-background z-40">
+        <div className="md:hidden fixed inset-0 bg-background z-40 overflow-y-auto pb-8">
           <PageContainer>
-            <div className="pt-24 flex flex-col gap-6">
+            <div className="pt-24 flex flex-col gap-2">
               {!isLoading && user ? (
-                <div className="border border-border cyber-chamfer-sm bg-card/60 px-4 py-3 flex items-center justify-between gap-3">
+                <div className="border border-border cyber-chamfer-sm bg-card/60 px-4 py-3 flex items-center justify-between gap-3 mb-4">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-accent/60 bg-accent/10 font-mono text-sm text-accent">
                       {avatarText}
@@ -178,8 +178,8 @@ export default function Navbar() {
                   href={link.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    'font-jetbrains uppercase tracking-widest text-xl',
-                    pathname === link.href ? 'text-accent' : 'text-foreground',
+                    'font-jetbrains uppercase tracking-widest text-xl py-4 w-full text-center border-b border-border/50 hover:bg-white/5 active:bg-white/10 transition-colors',
+                    pathname === link.href ? 'text-accent border-b-accent/50' : 'text-foreground',
                   )}
                 >
                   {link.label}
@@ -191,8 +191,8 @@ export default function Navbar() {
                   href="/auth/login"
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    'font-jetbrains uppercase tracking-widest text-xl',
-                    pathname === '/auth/login' ? 'text-accent' : 'text-foreground',
+                    'font-jetbrains uppercase tracking-widest text-xl py-4 w-full text-center border-b border-border/50 hover:bg-white/5 active:bg-white/10 transition-colors',
+                    pathname === '/auth/login' ? 'text-accent border-b-accent/50' : 'text-foreground',
                   )}
                 >
                   SYS_LOGIN

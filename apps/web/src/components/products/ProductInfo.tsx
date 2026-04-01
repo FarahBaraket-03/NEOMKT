@@ -22,7 +22,7 @@ export default function ProductInfo({ product }: { product: Product }) {
         <Link href={`/products?brandId=${liveProduct.brand.id}`} className="text-accentTertiary font-mono uppercase tracking-widest hover:underline text-sm mb-2 block font-bold transition-all hover:text-shadow-neon">
           // {liveProduct.brand.name}
         </Link>
-        <h1 className="text-4xl md:text-5xl lg:text-7xl font-black uppercase tracking-wider font-orbitron text-white mt-1 mb-4 leading-none">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black uppercase tracking-wider font-orbitron text-white mt-1 mb-4 leading-none break-words">
           {liveProduct.name}
         </h1>
       </div>
