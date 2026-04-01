@@ -1,15 +1,35 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { loadFilesSync } from '@graphql-tools/load-files';
 import { mergeTypeDefs } from '@graphql-tools/merge';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const scalarTypeDefs = loadFilesSync(path.join(__dirname, 'scalars.graphql'));
-const enumTypeDefs = loadFilesSync(path.join(__dirname, 'types', 'enums.graphql'));
-const objectTypeDefs = loadFilesSync(path.join(__dirname, 'types', '*.graphql'));
+function resolveSchemaRoot(): string {
+  const candidates = [
+    __dirname,
+    path.join(__dirname, '..', '..', 'src', 'schema'),
+    path.join(process.cwd(), 'src', 'schema'),
+    path.join(process.cwd(), 'apps', 'api', 'src', 'schema'),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(path.join(candidate, 'scalars.graphql'))) {
+      return candidate;
+    }
+  }
+
+  return __dirname;
+}
+
+const schemaRoot = resolveSchemaRoot();
+
+const scalarTypeDefs = loadFilesSync(path.join(schemaRoot, 'scalars.graphql'));
+const enumTypeDefs = loadFilesSync(path.join(schemaRoot, 'types', 'enums.graphql'));
+const objectTypeDefs = loadFilesSync(path.join(schemaRoot, 'types', '*.graphql'));
 
 export const typeDefs = mergeTypeDefs([
   scalarTypeDefs,
