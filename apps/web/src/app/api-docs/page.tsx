@@ -50,13 +50,14 @@ function formatSubscriptionError(error: unknown): string {
 
 function deriveWsEndpoint(httpEndpoint: string): string {
   const configuredWsEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_WS_URL;
-  if (configuredWsEndpoint) {
-    return configuredWsEndpoint;
-  }
+  const source = configuredWsEndpoint ?? httpEndpoint;
 
   try {
-    const url = new URL(httpEndpoint);
-    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = new URL(source);
+    url.protocol = url.protocol === 'https:' ? 'wss:' : url.protocol === 'http:' ? 'ws:' : url.protocol;
+    if (!url.pathname || url.pathname === '/') {
+      url.pathname = '/graphql';
+    }
     return url.toString();
   } catch {
     return 'ws://localhost:4000/graphql';
@@ -451,7 +452,8 @@ export default function ApiDocsPage() {
               }
             : {},
           shouldRetry: () => true,
-          retryAttempts: 3,
+          retryAttempts: 30,
+          retryWait: async () => new Promise((resolve) => setTimeout(resolve, 2000)),
         });
 
         let eventCount = 0;
@@ -498,6 +500,7 @@ export default function ApiDocsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'apollo-require-preflight': 'true',
           ...(session?.access_token
             ? { Authorization: `Bearer ${session.access_token}` }
             : {}),

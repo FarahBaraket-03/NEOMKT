@@ -16,7 +16,30 @@ import { useMemo, type ReactNode } from 'react';
 import { getBrowserSupabaseClient } from '@/lib/auth/supabase';
 
 const httpUri = process.env.NEXT_PUBLIC_GRAPHQL_HTTP_URL ?? 'http://localhost:4000/graphql';
-const wsUri = process.env.NEXT_PUBLIC_GRAPHQL_WS_URL ?? 'ws://localhost:4000/graphql';
+
+function normalizeWsUri(configuredWsUri: string | undefined, fallbackHttpUri: string): string {
+  const source = configuredWsUri ?? fallbackHttpUri;
+
+  try {
+    const url = new URL(source);
+
+    if (url.protocol === 'http:') {
+      url.protocol = 'ws:';
+    } else if (url.protocol === 'https:') {
+      url.protocol = 'wss:';
+    }
+
+    if (!url.pathname || url.pathname === '/') {
+      url.pathname = '/graphql';
+    }
+
+    return url.toString();
+  } catch {
+    return 'ws://localhost:4000/graphql';
+  }
+}
+
+const wsUri = normalizeWsUri(process.env.NEXT_PUBLIC_GRAPHQL_WS_URL, httpUri);
 
 function makeLink(): ApolloLink {
   const supabase = getBrowserSupabaseClient();
@@ -35,6 +58,7 @@ function makeLink(): ApolloLink {
     return {
       headers: {
         ...previousContext.headers,
+        'apollo-require-preflight': 'true',
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
     };
@@ -49,8 +73,9 @@ function makeLink(): ApolloLink {
   const wsLink = new GraphQLWsLink(
     createClient({
       url: wsUri,
-      retryAttempts: 5,
+      retryAttempts: 30,
       shouldRetry: () => true,
+      retryWait: async () => new Promise((resolve) => setTimeout(resolve, 2000)),
       connectionParams: async () => {
         const { data } = await supabase.auth.getSession();
         const accessToken = data.session?.access_token;
