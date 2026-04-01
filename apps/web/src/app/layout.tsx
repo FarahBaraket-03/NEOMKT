@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/auth/AuthContext';
 import RealtimeProvider from '@/components/realtime/RealtimeProvider';
 import { ToastProvider } from '@/components/ui/Toast';
 import AppChrome from '@/components/layout/AppChrome';
+import { warmupApi } from '@/lib/api/warmup';
 
 export const metadata: Metadata = {
   title: {
@@ -19,6 +20,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  void warmupApi();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg-background text-foreground min-h-screen" suppressHydrationWarning>

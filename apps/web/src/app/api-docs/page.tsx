@@ -21,7 +21,8 @@ type QueryType =
   | 'subscriptionPriceUpdated'
   | 'adminCreateBrandMutation'
   | 'adminUpdateBrandMutation'
-  | 'adminDeleteBrandMutation';
+  | 'adminDeleteBrandMutation'
+  | 'adminUpdateProductMutation';
 type UserRole = 'PUBLIC' | 'USER' | 'ADMIN';
 type OperationType = 'query' | 'mutation' | 'subscription';
 
@@ -295,6 +296,32 @@ export default function ApiDocsPage() {
           <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
           <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
             Deletes a brand by ID. This destructive mutation is locked for normal users.
+          </p>
+        </>
+      ),
+    },
+    adminUpdateProductMutation: {
+      label: 'adminUpdateProduct',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminUpdateProduct($id: ID!, $input: UpdateProductInput!) {\n  updateProduct(id: $id, input: $input) {\n    id\n    name\n    slug\n    price\n    stock\n    status\n    updatedAt\n  }\n}`,
+      defaultVariables: `{
+  "id": "replace-with-product-id",
+  "input": {
+    "name": "Updated Product Name",
+    "price": 1299.99,
+    "stock": 42,
+    "status": "ACTIVE"
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">updateProduct(id: ID!, input: UpdateProductInput!): <span className="text-white">Product</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Updates a product by ID with partial fields (price, stock, status, and metadata).
           </p>
         </>
       ),
