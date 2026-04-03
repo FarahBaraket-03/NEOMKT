@@ -1,4 +1,4 @@
-# GraphQL Tech Catalog Monorepo
+# GraphQL Tech Catalog 
 
 ![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)
@@ -17,6 +17,10 @@ The project includes:
 - A Next.js frontend with public catalog browsing, admin dashboard/pages, API docs playground, and wishlist features.
 - Supporting assets for database setup, specifications, design references, and scraping utilities.
 
+## Overview
+![homepage](image.png)
+![product](image-2.png)
+![brand](image-1.png)
 ## Project Structure
 
 ```text
