@@ -24,6 +24,7 @@ The project includes:
 
 ![brand](./img/image-1.png)
 
+
 ## What The Project Is About
 
 This project is a cyberpunk-themed technology catalog where users can browse products, brands, and categories, while admins can manage catalog data.
@@ -73,6 +74,19 @@ Core capabilities include:
 - Node.js 20+ (recommended)
 - npm 10+
 - A Supabase project (URL + keys)
+
+
+## UML Diagrams
+
+### Use Case Diagram
+![Use Case Diagram](./img/use_case.jpg)
+
+### Class Diagram
+![Class Diagram](./img/diag_class.jpg)
+
+## Presentation
+
+[View Presentation](https://docs.google.com/presentation/d/1l5EHlVT0B9A0M6hEbEXgESRdKhaQgUlTbZRoxmyNUlg/edit?usp=sharing)
 
 ## Getting Started
 
