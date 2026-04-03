@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, Home, Cpu, Database, LogOut, UserCircle } from 'lucide-react';
+import { Menu, X, Home, Cpu, Database, Heart, LogOut, UserCircle } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,8 @@ const links = [
   { href: '/brands', label: 'BRANDS', icon: Cpu, prefix: '' },
   { href: '/api-docs', label: 'API_DOCS', icon: Database, prefix: '' },
 ];
+
+const wishlistLink = { href: '/wishlist', label: 'WISHLIST', icon: Heart, prefix: '' };
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,6 +59,8 @@ export default function Navbar() {
     router.push('/');
   };
 
+  const navLinks = user ? [...links, wishlistLink] : links;
+
   return (
     <header className="sticky top-0 z-50 border-b border-border backdrop-blur-sm bg-background/80">
       <PageContainer>
@@ -74,7 +78,7 @@ export default function Navbar() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            {links.map((link) => {
+            {navLinks.map((link) => {
               const isActive = pathname === link.href;
               const Icon = link.icon;
               
@@ -172,7 +176,7 @@ export default function Navbar() {
                 </div>
               ) : null}
 
-              {links.map((link) => (
+              {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

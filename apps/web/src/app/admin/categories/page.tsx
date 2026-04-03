@@ -58,7 +58,51 @@ export default function AdminCategoriesPage() {
     return map;
   }, [categories]);
 
+  const categoryById = useMemo(() => {
+    const map = new Map<string, AdminCategoryItem>();
+    for (const category of categories) {
+      map.set(category.id, category);
+    }
+    return map;
+  }, [categories]);
+
   const rootCategories = childrenByParent.get(ROOT_KEY) ?? [];
+
+  const totalProductsByCategory = useMemo(() => {
+    const totals = new Map<string, number>();
+
+    const countProducts = (categoryId: string, path: Set<string>): number => {
+      if (totals.has(categoryId)) {
+        return totals.get(categoryId) ?? 0;
+      }
+
+      // Guard against accidental cycles in category parent references.
+      if (path.has(categoryId)) {
+        return 0;
+      }
+
+      const category = categoryById.get(categoryId);
+      const ownCount = category?.products.length ?? 0;
+      const children = childrenByParent.get(categoryId) ?? [];
+
+      const nextPath = new Set(path);
+      nextPath.add(categoryId);
+
+      const childrenCount = children.reduce((sum, child) => {
+        return sum + countProducts(child.id, nextPath);
+      }, 0);
+
+      const total = ownCount + childrenCount;
+      totals.set(categoryId, total);
+      return total;
+    };
+
+    for (const category of categories) {
+      countProducts(category.id, new Set());
+    }
+
+    return totals;
+  }, [categories, categoryById, childrenByParent]);
 
   const visibleRows = useMemo(() => {
     const rows: CategoryRow[] = [];
@@ -134,6 +178,8 @@ export default function AdminCategoriesPage() {
                 {visibleRows.map((row, index) => {
                   const { category, depth, hasChildren } = row;
                   const childrenCount = childrenByParent.get(category.id)?.length ?? 0;
+                  const directProductsCount = category.products.length;
+                  const totalProductsCount = totalProductsByCategory.get(category.id) ?? directProductsCount;
 
                   return (
                     <tr
@@ -181,7 +227,7 @@ export default function AdminCategoriesPage() {
                             <div className="flex items-center gap-2">
                               <span className="uppercase tracking-wide">{category.name}</span>
                               <span className="font-sharetech text-[10px] uppercase tracking-widest text-mutedForeground">
-                                ({category.products.length} products)
+                                ({totalProductsCount} products)
                               </span>
                               {hasChildren ? (
                                 <span className="font-sharetech text-[10px] uppercase tracking-widest text-accent">
@@ -195,7 +241,7 @@ export default function AdminCategoriesPage() {
 
                       <td className="px-3 py-2 uppercase tracking-wide">{category.slug}</td>
                       <td className="px-3 py-2 uppercase tracking-wide">{category.icon ?? '-'}</td>
-                      <td className="px-3 py-2">{category.products.length}</td>
+                      <td className="px-3 py-2">{totalProductsCount}</td>
 
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
