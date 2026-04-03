@@ -15,6 +15,16 @@ type QueryType =
   | 'listProducts'
   | 'filterProducts'
   | 'getBrand'
+  | 'getBrandById'
+  | 'getCategories'
+  | 'getCategoryById'
+  | 'getProductsCount'
+  | 'getLowStockProductsCount'
+  | 'getProductSpecs'
+  | 'getReviews'
+  | 'getReviewsCount'
+  | 'getWishlist'
+  | 'isProductWishlisted'
   | 'aboutNeomkt'
   | 'subscriptionProductUpdated'
   | 'subscriptionProductStockChanged'
@@ -22,7 +32,20 @@ type QueryType =
   | 'adminCreateBrandMutation'
   | 'adminUpdateBrandMutation'
   | 'adminDeleteBrandMutation'
-  | 'adminUpdateProductMutation';
+  | 'adminCreateCategoryMutation'
+  | 'adminUpdateCategoryMutation'
+  | 'adminDeleteCategoryMutation'
+  | 'adminCreateProductMutation'
+  | 'adminUpdateProductMutation'
+  | 'adminDeleteProductMutation'
+  | 'adminCreateProductSpecMutation'
+  | 'adminUpdateProductSpecMutation'
+  | 'adminDeleteProductSpecMutation'
+  | 'createReviewMutation'
+  | 'updateReviewMutation'
+  | 'deleteReviewMutation'
+  | 'addToWishlistMutation'
+  | 'removeFromWishlistMutation';
 type UserRole = 'PUBLIC' | 'USER' | 'ADMIN';
 type OperationType = 'query' | 'mutation' | 'subscription';
 
@@ -125,6 +148,57 @@ export default function ApiDocsPage() {
         </>
       ),
     },
+    getBrandById: {
+      label: 'getBrandById',
+      operationType: 'query',
+      query: `query GetBrandById($id: ID!) {\n  brand(id: $id) {\n    id\n    name\n    slug\n    country\n    foundedYear\n    websiteUrl\n  }\n}`,
+      defaultVariables: `{
+  "id": "replace-with-brand-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">brand(id: ID!): <span className="text-white">Brand</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Fetches one brand by ID.
+          </p>
+        </>
+      ),
+    },
+    getCategories: {
+      label: 'getCategories',
+      operationType: 'query',
+      query: `query GetCategories {\n  categories {\n    id\n    name\n    slug\n    icon\n    parentId\n  }\n}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">categories: <span className="text-white">[Category]</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Returns all catalog categories.
+          </p>
+        </>
+      ),
+    },
+    getCategoryById: {
+      label: 'getCategoryById',
+      operationType: 'query',
+      query: `query GetCategoryById($id: ID!) {\n  category(id: $id) {\n    id\n    name\n    slug\n    description\n    icon\n    parentId\n  }\n}`,
+      defaultVariables: `{
+  "id": "replace-with-category-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">category(id: ID!): <span className="text-white">Category</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Returns a single category by ID.
+          </p>
+        </>
+      ),
+    },
     getProduct: {
       label: 'getProduct',
       query: `query GetProductById($id: String!) {\n  product(id: $id) {\n    id\n    name\n    price\n    stock\n  }\n}`,
@@ -171,6 +245,129 @@ export default function ApiDocsPage() {
           <p className="font-mono mb-4">{'}'}</p>
           <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
             Filters the catalog by status, price range, and keyword search to test query arguments.
+          </p>
+        </>
+      ),
+    },
+    getProductsCount: {
+      label: 'getProductsCount',
+      operationType: 'query',
+      query: `query GetProductsCount {\n  productsCount\n}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">productsCount: <span className="text-white">Int</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Returns total number of products.
+          </p>
+        </>
+      ),
+    },
+    getLowStockProductsCount: {
+      label: 'getLowStockProductsCount',
+      operationType: 'query',
+      query: `query GetLowStockProductsCount($threshold: Int) {\n  lowStockProductsCount(threshold: $threshold)\n}`,
+      defaultVariables: `{
+  "threshold": 10
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">lowStockProductsCount(threshold: Int): <span className="text-white">Int</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Returns product count below a stock threshold.
+          </p>
+        </>
+      ),
+    },
+    getProductSpecs: {
+      label: 'getProductSpecs',
+      operationType: 'query',
+      query: `query GetProductSpecs($productId: ID!) {\n  productSpecs(productId: $productId) {\n    id\n    productId\n    key\n    value\n    unit\n    displayOrder\n  }\n}`,
+      defaultVariables: `{
+  "productId": "replace-with-product-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">productSpecs(productId: ID!): <span className="text-white">[ProductSpec]</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Returns technical specs for a product.
+          </p>
+        </>
+      ),
+    },
+    getReviews: {
+      label: 'getReviews',
+      operationType: 'query',
+      query: `query GetReviews($productId: ID, $limit: Int, $offset: Int) {\n  reviews(productId: $productId, limit: $limit, offset: $offset) {\n    id\n    productId\n    rating\n    title\n    comment\n    createdAt\n    user {\n      id\n      username\n    }\n  }\n}`,
+      defaultVariables: `{
+  "productId": "replace-with-product-id",
+  "limit": 20,
+  "offset": 0
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">reviews(productId: ID, limit: Int, offset: Int): <span className="text-white">[Review]</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Reviews feed. Note: omitting productId requires admin.
+          </p>
+        </>
+      ),
+    },
+    getReviewsCount: {
+      label: 'getReviewsCount',
+      operationType: 'query',
+      query: `query GetReviewsCount($productId: ID) {\n  reviewsCount(productId: $productId)\n}`,
+      defaultVariables: `{
+  "productId": "replace-with-product-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">reviewsCount(productId: ID): <span className="text-white">Int</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Returns review count. Omitting productId requires admin.
+          </p>
+        </>
+      ),
+    },
+    getWishlist: {
+      label: 'getWishlist',
+      operationType: 'query',
+      requiresAuth: true,
+      query: `query GetWishlist {\n  wishlist {\n    id\n    userId\n    productId\n    addedAt\n    product {\n      id\n      name\n      slug\n      price\n      stock\n    }\n  }\n}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">wishlist: <span className="text-white">[WishlistItem]</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Returns wishlist for the authenticated user.
+          </p>
+        </>
+      ),
+    },
+    isProductWishlisted: {
+      label: 'isProductWishlisted',
+      operationType: 'query',
+      query: `query IsProductWishlisted($productId: ID!) {\n  isProductWishlisted(productId: $productId)\n}`,
+      defaultVariables: `{
+  "productId": "replace-with-product-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">isProductWishlisted(productId: ID!): <span className="text-white">Boolean</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Checks whether current user has the product in wishlist.
           </p>
         </>
       ),
@@ -323,6 +520,299 @@ export default function ApiDocsPage() {
           <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
           <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
             Updates a product by ID with partial fields (price, stock, status, and metadata).
+          </p>
+        </>
+      ),
+    },
+    adminCreateCategoryMutation: {
+      label: 'adminCreateCategory',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminCreateCategory($input: CreateCategoryInput!) {\n  createCategory(input: $input) {\n    id\n    name\n    slug\n    description\n    icon\n  }\n}`,
+      defaultVariables: `{
+  "input": {
+    "name": "Peripherals",
+    "slug": "peripherals-test",
+    "description": "Admin-created category"
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">createCategory(input: CreateCategoryInput!): <span className="text-white">Category</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Creates a new category.
+          </p>
+        </>
+      ),
+    },
+    adminUpdateCategoryMutation: {
+      label: 'adminUpdateCategory',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminUpdateCategory($id: ID!, $input: UpdateCategoryInput!) {\n  updateCategory(id: $id, input: $input) {\n    id\n    name\n    slug\n    description\n    icon\n  }\n}`,
+      defaultVariables: `{
+  "id": "replace-with-category-id",
+  "input": {
+    "name": "Updated Category Name"
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">updateCategory(id: ID!, input: UpdateCategoryInput!): <span className="text-white">Category</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Updates category details.
+          </p>
+        </>
+      ),
+    },
+    adminDeleteCategoryMutation: {
+      label: 'adminDeleteCategory',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminDeleteCategory($id: ID!) {\n  deleteCategory(id: $id)\n}`,
+      defaultVariables: `{
+  "id": "replace-with-category-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">deleteCategory(id: ID!): <span className="text-white">Boolean</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Deletes a category by ID.
+          </p>
+        </>
+      ),
+    },
+    adminCreateProductMutation: {
+      label: 'adminCreateProduct',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminCreateProduct($input: CreateProductInput!) {\n  createProduct(input: $input) {\n    id\n    name\n    slug\n    price\n    stock\n    status\n  }\n}`,
+      defaultVariables: `{
+  "input": {
+    "name": "Test Product",
+    "slug": "test-product-admin",
+    "price": 999.99,
+    "stock": 20,
+    "brandId": "replace-with-brand-id",
+    "categoryId": "replace-with-category-id",
+    "status": "ACTIVE"
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">createProduct(input: CreateProductInput!): <span className="text-white">Product</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Creates a new product entry.
+          </p>
+        </>
+      ),
+    },
+    adminDeleteProductMutation: {
+      label: 'adminDeleteProduct',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminDeleteProduct($id: ID!) {\n  deleteProduct(id: $id)\n}`,
+      defaultVariables: `{
+  "id": "replace-with-product-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">deleteProduct(id: ID!): <span className="text-white">Boolean</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Deletes a product by ID.
+          </p>
+        </>
+      ),
+    },
+    adminCreateProductSpecMutation: {
+      label: 'adminCreateProductSpec',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminCreateProductSpec($input: CreateProductSpecInput!) {\n  createProductSpec(input: $input) {\n    id\n    productId\n    key\n    value\n    unit\n    displayOrder\n  }\n}`,
+      defaultVariables: `{
+  "input": {
+    "productId": "replace-with-product-id",
+    "key": "Battery",
+    "value": "5000",
+    "unit": "mAh",
+    "displayOrder": 1
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">createProductSpec(input: CreateProductSpecInput!): <span className="text-white">ProductSpec</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Adds a specification row for a product.
+          </p>
+        </>
+      ),
+    },
+    adminUpdateProductSpecMutation: {
+      label: 'adminUpdateProductSpec',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminUpdateProductSpec($id: ID!, $input: UpdateProductSpecInput!) {\n  updateProductSpec(id: $id, input: $input) {\n    id\n    productId\n    key\n    value\n    unit\n    displayOrder\n  }\n}`,
+      defaultVariables: `{
+  "id": "replace-with-spec-id",
+  "input": {
+    "value": "5500"
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">updateProductSpec(id: ID!, input: UpdateProductSpecInput!): <span className="text-white">ProductSpec</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Updates a product specification by ID.
+          </p>
+        </>
+      ),
+    },
+    adminDeleteProductSpecMutation: {
+      label: 'adminDeleteProductSpec',
+      requiresAdmin: true,
+      operationType: 'mutation',
+      query: `mutation AdminDeleteProductSpec($id: ID!) {\n  deleteProductSpec(id: $id)\n}`,
+      defaultVariables: `{
+  "id": "replace-with-spec-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accentTertiary">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">deleteProductSpec(id: ID!): <span className="text-white">Boolean</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Deletes a specification row by ID.
+          </p>
+        </>
+      ),
+    },
+    createReviewMutation: {
+      label: 'createReview',
+      requiresAuth: true,
+      operationType: 'mutation',
+      query: `mutation CreateReview($input: CreateReviewInput!) {\n  createReview(input: $input) {\n    id\n    productId\n    rating\n    title\n    comment\n    createdAt\n  }\n}`,
+      defaultVariables: `{
+  "input": {
+    "productId": "replace-with-product-id",
+    "rating": 5,
+    "title": "Excellent",
+    "comment": "Great product"
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">createReview(input: CreateReviewInput!): <span className="text-white">Review</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accent text-xs uppercase tracking-widest font-mono mb-2">AUTH REQUIRED</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Creates a review for an authenticated user.
+          </p>
+        </>
+      ),
+    },
+    updateReviewMutation: {
+      label: 'updateReview',
+      requiresAuth: true,
+      operationType: 'mutation',
+      query: `mutation UpdateReview($id: ID!, $input: UpdateReviewInput!) {\n  updateReview(id: $id, input: $input) {\n    id\n    rating\n    title\n    comment\n    updatedAt\n  }\n}`,
+      defaultVariables: `{
+  "id": "replace-with-review-id",
+  "input": {
+    "rating": 4,
+    "comment": "Updated comment"
+  }
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">updateReview(id: ID!, input: UpdateReviewInput!): <span className="text-white">Review</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accent text-xs uppercase tracking-widest font-mono mb-2">AUTH REQUIRED</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Updates your own review (or admin-owned access).
+          </p>
+        </>
+      ),
+    },
+    deleteReviewMutation: {
+      label: 'deleteReview',
+      requiresAuth: true,
+      operationType: 'mutation',
+      query: `mutation DeleteReview($id: ID!) {\n  deleteReview(id: $id)\n}`,
+      defaultVariables: `{
+  "id": "replace-with-review-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">deleteReview(id: ID!): <span className="text-white">Boolean</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accent text-xs uppercase tracking-widest font-mono mb-2">AUTH REQUIRED</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Deletes your own review.
+          </p>
+        </>
+      ),
+    },
+    addToWishlistMutation: {
+      label: 'addToWishlist',
+      requiresAuth: true,
+      operationType: 'mutation',
+      query: `mutation AddToWishlist($productId: ID!) {\n  addToWishlist(productId: $productId) {\n    id\n    productId\n    userId\n    addedAt\n  }\n}`,
+      defaultVariables: `{
+  "productId": "replace-with-product-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">addToWishlist(productId: ID!): <span className="text-white">WishlistItem</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accent text-xs uppercase tracking-widest font-mono mb-2">AUTH REQUIRED</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Adds product to authenticated user's wishlist.
+          </p>
+        </>
+      ),
+    },
+    removeFromWishlistMutation: {
+      label: 'removeFromWishlist',
+      requiresAuth: true,
+      operationType: 'mutation',
+      query: `mutation RemoveFromWishlist($productId: ID!) {\n  removeFromWishlist(productId: $productId)\n}`,
+      defaultVariables: `{
+  "productId": "replace-with-product-id"
+}`,
+      doc: (
+        <>
+          <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Mutation</span> {'{'}</p>
+          <p className="pl-4 font-mono text-sm text-mutedForeground">removeFromWishlist(productId: ID!): <span className="text-white">Boolean</span></p>
+          <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accent text-xs uppercase tracking-widest font-mono mb-2">AUTH REQUIRED</p>
+          <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
+            Removes product from authenticated user's wishlist.
           </p>
         </>
       ),
@@ -533,7 +1023,7 @@ export default function ApiDocsPage() {
   };
 
   const syntaxHighlight = (text: string): string => {
-    let formatted = text
+    return text
       .replace(/(&)/g, '&amp;')
       .replace(/(<)/g, '&lt;')
       .replace(/(>)/g, '&gt;')
@@ -541,7 +1031,6 @@ export default function ApiDocsPage() {
       .replace(/\b(true|false|null)\b/g, '<span class="text-secondary">$1</span>')
       .replace(/: \s*(-?\d+\.?\d*)/g, ': <span class="text-accentTertiary">$1</span>')
       .replace(/^(\s*)"([^"]+)"/m, '$1<span class="text-white">"$2"</span>');
-    return formatted;
   };
 
   return (
@@ -588,10 +1077,17 @@ export default function ApiDocsPage() {
               </CardHeader>
               <CardContent className="p-0 flex-1 overflow-y-auto min-h-0">
                 <div className="p-4">
-                  <p className="text-xs font-mono text-mutedForeground mb-4 opacity-70">// AVAILABLE QUERIES</p>
+                  <p className="text-xs font-mono text-mutedForeground mb-4 opacity-70">// AVAILABLE OPERATIONS</p>
                   <ul className="space-y-2">
                     {(Object.keys(queries) as QueryType[]).map((key) => (
                       <li key={key}>
+                        {queries[key].requiresAuth && !queries[key].requiresAdmin ? (
+                          <div className="mb-1 flex items-center gap-2 px-3">
+                            <span className="text-[10px] font-mono uppercase tracking-widest text-accentSecondary">
+                              auth required
+                            </span>
+                          </div>
+                        ) : null}
                         {queries[key].requiresAdmin ? (
                           <div className="mb-1 flex items-center gap-2 px-3">
                             <Lock className="w-3 h-3 text-destructive" />
@@ -607,6 +1103,9 @@ export default function ApiDocsPage() {
                             activeQuery === key 
                               ? "bg-accent/10 border border-accent text-accent" 
                               : "text-mutedForeground hover:text-white hover:bg-white/5 border border-transparent",
+                            queries[key].requiresAuth && !queries[key].requiresAdmin && !session?.access_token
+                              ? 'border-accentSecondary/50 text-accentSecondary'
+                              : undefined,
                             queries[key].requiresAdmin && viewerRole !== 'ADMIN'
                               ? 'border-destructive/50 text-destructive/90'
                               : undefined,
@@ -737,7 +1236,7 @@ export default function ApiDocsPage() {
                   <pre className="font-mono text-xs text-accent leading-relaxed whitespace-pre-wrap">
                     {response.split('\n').map((line, idx) => {
                       const formatted = syntaxHighlight(line);
-                      const displayLine = !formatted.trim() ? '&nbsp;' : formatted;
+                      const displayLine = formatted.trim() ? formatted : '&nbsp;';
                       return (
                         <div key={idx} dangerouslySetInnerHTML={{ __html: displayLine }} />
                       );
