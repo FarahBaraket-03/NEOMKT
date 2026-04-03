@@ -1,7 +1,7 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import Card, { CardContent, CardHeader } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
@@ -18,6 +18,8 @@ export default function EditReviewForm({
   isOwner: boolean;
   onUpdated?: () => void;
 }) {
+  const deleteDialogTitleId = useId();
+  const deleteDialogDescriptionId = useId();
   const [rating, setRating] = useState(review.rating);
   const [title, setTitle] = useState(review.title ?? '');
   const [comment, setComment] = useState(review.comment);
@@ -70,9 +72,13 @@ export default function EditReviewForm({
               </Dialog.Trigger>
               <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-background/80" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cyber-chamfer border border-destructive bg-card p-6 max-w-md w-[90vw]">
-                  <Dialog.Title className="font-orbitron uppercase text-destructive">CONFIRM DELETE</Dialog.Title>
-                  <p className="font-jetbrains text-sm mt-3">This action cannot be undone.</p>
+                <Dialog.Content
+                  aria-labelledby={deleteDialogTitleId}
+                  aria-describedby={deleteDialogDescriptionId}
+                  className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cyber-chamfer border border-destructive bg-card p-6 max-w-md w-[90vw]"
+                >
+                  <Dialog.Title id={deleteDialogTitleId} className="font-orbitron uppercase text-destructive">CONFIRM DELETE</Dialog.Title>
+                  <Dialog.Description id={deleteDialogDescriptionId} className="font-jetbrains text-sm mt-3">This action cannot be undone.</Dialog.Description>
                   <div className="mt-6 flex gap-3">
                     <Dialog.Close asChild>
                       <Button variant="ghost">CANCEL</Button>

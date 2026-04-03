@@ -18,9 +18,23 @@ The project includes:
 - Supporting assets for database setup, specifications, design references, and scraping utilities.
 
 ## Overview
-![homepage](image.png)
-![product](image-2.png)
-![brand](image-1.png)
+![homepage](./img/image.png)
+
+![product](./img/image-2.png)
+
+![brand](./img/image-1.png)
+
+## What The Project Is About
+
+This project is a cyberpunk-themed technology catalog where users can browse products, brands, and categories, while admins can manage catalog data.
+
+Core capabilities include:
+- Product, brand, category, review, and spec management
+- Admin-only operations for protected mutations
+- Real-time subscription updates (for example, product updates)
+- User wishlist flows
+- API docs page to test GraphQL operations interactively
+
 ## Project Structure
 
 ```text
@@ -53,16 +67,6 @@ The project includes:
 - Tailwind CSS
 - Supabase client/auth helpers
 
-## What The Project Is About
-
-This project is a cyberpunk-themed technology catalog where users can browse products, brands, and categories, while admins can manage catalog data.
-
-Core capabilities include:
-- Product, brand, category, review, and spec management
-- Admin-only operations for protected mutations
-- Real-time subscription updates (for example, product updates)
-- User wishlist flows
-- API docs page to test GraphQL operations interactively
 
 ## Prerequisites
 

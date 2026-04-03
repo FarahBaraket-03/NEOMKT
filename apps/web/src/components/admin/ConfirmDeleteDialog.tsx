@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -20,6 +20,8 @@ export default function ConfirmDeleteDialog({
   description,
   onConfirm,
 }: ConfirmDeleteDialogProps) {
+  const titleId = useId();
+  const descriptionId = useId();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -41,14 +43,18 @@ export default function ConfirmDeleteDialog({
       <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-background/80 z-[90]" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[91] w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2 border border-destructive/60 bg-card cyber-chamfer p-6 space-y-4">
-          <Dialog.Title className="font-orbitron text-destructive uppercase tracking-wider text-lg">
+        <Dialog.Content
+          aria-labelledby={titleId}
+          aria-describedby={descriptionId}
+          className="fixed left-1/2 top-1/2 z-[91] w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2 border border-destructive/60 bg-card cyber-chamfer p-6 space-y-4"
+        >
+          <Dialog.Title id={titleId} className="font-orbitron text-destructive uppercase tracking-wider text-lg">
             {title}
           </Dialog.Title>
 
-          <p className="font-jetbrains text-xs uppercase tracking-widest text-mutedForeground">
+          <Dialog.Description id={descriptionId} className="font-jetbrains text-xs uppercase tracking-widest text-mutedForeground">
             {description ?? `Type ${itemName} to confirm permanent deletion.`}
-          </p>
+          </Dialog.Description>
 
           <Input
             value={value}
