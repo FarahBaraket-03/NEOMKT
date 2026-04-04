@@ -114,7 +114,7 @@ function collectSelectionMetrics(
   return metrics;
 }
 
-function getQueryMetrics(query: string, operationName?: string | null): QueryMetrics | null {
+export function getQueryMetrics(query: string, operationName?: string | null): QueryMetrics | null {
   try {
     const parsed = parse(query);
 
@@ -166,44 +166,34 @@ function getGraphQLRequestEntries(req: Request): GraphQLRequestBody[] {
   return body ? [body] : [];
 }
 
-function selectionContainsIntrospectionField(
+function selectionContainsOnlyIntrospectionFields(
   selectionSet: SelectionSetNode | undefined,
   fragments: Map<string, FragmentDefinitionNode>,
   visitedFragments: Set<string>,
 ): boolean {
   if (!selectionSet) {
-    return false;
+    return true;
   }
 
   for (const selection of selectionSet.selections) {
     if (selection.kind === 'Field') {
       const fieldName = selection.name.value;
-      if (fieldName === '__schema' || fieldName === '__type') {
-        return true;
+      if (fieldName === '__schema' || fieldName === '__type' || fieldName === '__typename') {
+        continue;
       }
 
-      if (
-        selectionContainsIntrospectionField(
-          selection.selectionSet,
-          fragments,
-          visitedFragments,
-        )
-      ) {
-        return true;
-      }
-
-      continue;
+      return false;
     }
 
     if (selection.kind === 'InlineFragment') {
       if (
-        selectionContainsIntrospectionField(
+        !selectionContainsOnlyIntrospectionFields(
           selection.selectionSet,
           fragments,
           visitedFragments,
         )
       ) {
-        return true;
+        return false;
       }
 
       continue;
@@ -224,21 +214,21 @@ function selectionContainsIntrospectionField(
       nextVisited.add(fragmentName);
 
       if (
-        selectionContainsIntrospectionField(
+        !selectionContainsOnlyIntrospectionFields(
           fragment.selectionSet,
           fragments,
           nextVisited,
         )
       ) {
-        return true;
+        return false;
       }
     }
   }
 
-  return false;
+  return true;
 }
 
-function isIntrospectionQuery(query: string, operationName?: string | null): boolean {
+export function isIntrospectionQuery(query: string, operationName?: string | null): boolean {
   try {
     const parsed = parse(query);
     const fragments = new Map<string, FragmentDefinitionNode>();
@@ -262,10 +252,14 @@ function isIntrospectionQuery(query: string, operationName?: string | null): boo
       ? operations.filter((operation) => operation.name?.value === operationName)
       : operations;
 
-    return targetOperations.some((operation) =>
-      selectionContainsIntrospectionField(operation.selectionSet, fragments, new Set<string>()));
+    return targetOperations.every((operation) =>
+      selectionContainsOnlyIntrospectionFields(
+        operation.selectionSet,
+        fragments,
+        new Set<string>(),
+      ));
   } catch {
-    return /__schema|__type/.test(query);
+    return false;
   }
 }
 

@@ -15,6 +15,16 @@ describe('validators', () => {
     ).toThrow();
   });
 
+  it('rejects long review title', () => {
+    expect(() =>
+      validateCreateReviewInput({
+        rating: 5,
+        comment: 'This is a valid comment length.',
+        title: 'a'.repeat(101),
+      }),
+    ).toThrow();
+  });
+
   it('rejects invalid review rating', () => {
     expect(() =>
       validateCreateReviewInput({
