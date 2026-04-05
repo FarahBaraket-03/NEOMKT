@@ -2,15 +2,35 @@ import { ValidationError } from '../utils/errors.js';
 
 interface ReviewInput {
   rating?: number;
+  title?: string | null;
   comment?: string;
 }
 
 const MIN_COMMENT_LENGTH = 10;
 const MAX_COMMENT_LENGTH = 2000;
+const MAX_TITLE_LENGTH = 100;
 
 function validateRating(rating: number): void {
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     throw new ValidationError('rating must be between 1 and 5', 'rating');
+  }
+}
+
+function validateTitle(title: unknown): void {
+  if (title === null || title === undefined) {
+    return;
+  }
+
+  if (typeof title !== 'string') {
+    throw new ValidationError('title must be a string', 'title');
+  }
+
+  const normalized = title.trim();
+  if (normalized.length > MAX_TITLE_LENGTH) {
+    throw new ValidationError(
+      `title cannot exceed ${MAX_TITLE_LENGTH} characters`,
+      'title',
+    );
   }
 }
 
@@ -39,6 +59,8 @@ export function validateCreateReviewInput(input: ReviewInput): void {
   }
   validateRating(input.rating);
 
+  validateTitle(input.title);
+
   if (typeof input.comment !== 'string') {
     throw new ValidationError('comment is required', 'comment');
   }
@@ -48,6 +70,9 @@ export function validateCreateReviewInput(input: ReviewInput): void {
 export function validateUpdateReviewInput(input: ReviewInput): void {
   if (input.rating !== undefined) {
     validateRating(input.rating);
+  }
+  if (input.title !== undefined) {
+    validateTitle(input.title);
   }
   if (input.comment !== undefined) {
     validateComment(input.comment);
