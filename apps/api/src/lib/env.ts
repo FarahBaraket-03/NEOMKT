@@ -10,6 +10,7 @@ interface EnvConfig {
   PORT: number;
   NODE_ENV: 'development' | 'test' | 'production';
   GRAPHQL_INTROSPECTION: boolean;
+  CORS_ORIGINS: string | string[];
 }
 
 function getEnvVar(name: keyof Omit<EnvConfig, 'PORT' | 'NODE_ENV'>): string {
@@ -56,6 +57,18 @@ function parseBooleanEnv(value: string | undefined, fallback: boolean): boolean 
   throw new Error('Invalid GRAPHQL_INTROSPECTION. Expected a boolean-like value.');
 }
 
+function parseCorsOrigins(value: string | undefined): string | string[] {
+  if (!value || value.trim().length === 0) {
+    return '*';
+  }
+
+  if (value.includes(',')) {
+    return value.split(',').map((origin) => origin.trim()).filter((origin) => origin.length > 0);
+  }
+
+  return value.trim();
+}
+
 export function validateEnv(): EnvConfig {
   const nodeEnv = getNodeEnv();
 
@@ -70,6 +83,7 @@ export function validateEnv(): EnvConfig {
       process.env.GRAPHQL_INTROSPECTION,
       true,
     ),
+    CORS_ORIGINS: parseCorsOrigins(process.env.CORS_ORIGINS),
   };
 
   if (
