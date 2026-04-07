@@ -442,7 +442,7 @@ async function startServer(): Promise<void> {
 
   app.use(
     '/graphql',
-    cors(),
+    cors({ origin: env.CORS_ORIGINS }),
     express.json(),
     queryComplexityGuard,
     mutationRateLimiter,
