@@ -371,6 +371,8 @@ const mutationRateLimiter = rateLimit({
 });
 
 const app = express();
+// API is deployed behind a reverse proxy (e.g. Render), so trust one hop.
+app.set('trust proxy', 1);
 const httpServer = http.createServer(app);
 
 const schema = createSchema(
