@@ -1,3 +1,4 @@
+import sanitizeHtml from 'sanitize-html';
 import type { GraphQLContext } from '../types/context.js';
 import type {
   ProductRow,
@@ -52,6 +53,37 @@ const DEFAULT_PRODUCT_PAGE_SIZE = 20;
 const MAX_PRODUCT_PAGE_SIZE = 100;
 const DEFAULT_PRODUCT_RELATED_PAGE_SIZE = 20;
 const MAX_PRODUCT_RELATED_PAGE_SIZE = 100;
+
+const PRODUCT_TEXT_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [],
+  allowedAttributes: {},
+  disallowedTagsMode: 'discard',
+};
+
+function sanitizeProductText(value: string): string {
+  return sanitizeHtml(value, PRODUCT_TEXT_SANITIZE_OPTIONS)
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .trim();
+}
+
+function sanitizeOptionalProductText(
+  value: string | null | undefined,
+): string | null | undefined {
+  if (value === undefined || value === null) {
+    return value;
+  }
+
+  const sanitized = sanitizeProductText(value);
+  return sanitized.length > 0 ? sanitized : null;
+}
+
+function sanitizeProductInput(input: ProductInput): ProductInput {
+  return {
+    ...input,
+    name: input.name !== undefined ? sanitizeProductText(input.name) : undefined,
+    description: sanitizeOptionalProductText(input.description),
+  };
+}
 
 interface ProductFieldPaginationArgs {
   limit?: number;
@@ -224,11 +256,12 @@ export const productResolvers = {
       args: { input: ProductInput },
       ctx: GraphQLContext,
     ) => {
-      validateCreateProductInput(args.input);
+      const sanitizedInput = sanitizeProductInput(args.input);
+      validateCreateProductInput(sanitizedInput);
 
       const { data, error } = await ctx.supabase
         .from('products')
-        .insert(toDbProductInput(args.input))
+        .insert(toDbProductInput(sanitizedInput))
         .select('*')
         .single();
 
@@ -245,7 +278,8 @@ export const productResolvers = {
       args: { id: string; input: ProductInput },
       ctx: GraphQLContext,
     ) => {
-      validateUpdateProductInput(args.input);
+      const sanitizedInput = sanitizeProductInput(args.input);
+      validateUpdateProductInput(sanitizedInput);
 
       const { data: currentData, error: currentError } = await ctx.supabase
         .from('products')
@@ -261,7 +295,7 @@ export const productResolvers = {
 
       const { data, error } = await ctx.supabase
         .from('products')
-        .update(toDbProductInput(args.input))
+        .update(toDbProductInput(sanitizedInput))
         .eq('id', args.id)
         .select('*')
         .single();

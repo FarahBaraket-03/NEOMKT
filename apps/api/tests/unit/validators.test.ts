@@ -32,4 +32,27 @@ describe('validators', () => {
       }),
     ).not.toThrow();
   });
+
+  it('rejects product name exceeding 200 characters', () => {
+    expect(() =>
+      validateCreateProductInput({
+        name: 'a'.repeat(201),
+        slug: 'test-slug',
+        price: 100,
+        stock: 10,
+      }),
+    ).toThrow(/name cannot exceed 200 characters/);
+  });
+
+  it('rejects product description exceeding 2000 characters', () => {
+    expect(() =>
+      validateCreateProductInput({
+        name: 'Valid Name',
+        description: 'a'.repeat(2001),
+        slug: 'test-slug',
+        price: 100,
+        stock: 10,
+      }),
+    ).toThrow(/description cannot exceed 2000 characters/);
+  });
 });
