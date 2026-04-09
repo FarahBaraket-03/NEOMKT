@@ -32,4 +32,16 @@ describe('validators', () => {
       }),
     ).not.toThrow();
   });
+
+  it('rejects overly long product description', () => {
+    expect(() =>
+      validateCreateProductInput({
+        name: 'x',
+        slug: 'valid-slug',
+        price: 10,
+        stock: 2,
+        description: 'a'.repeat(5001),
+      }),
+    ).toThrow(/description cannot exceed 5000 characters/);
+  });
 });
