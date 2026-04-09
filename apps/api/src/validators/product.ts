@@ -9,12 +9,19 @@ interface ProductInputBase {
 }
 
 const SLUG_REGEX = /^[a-z0-9-]+$/;
+
 const MAX_DESCRIPTION_LENGTH = 5000;
+
+const MAX_NAME_LENGTH = 200;
+
 
 function validateCoreFields(input: ProductInputBase, allowPartial: boolean): void {
   if (!allowPartial || input.name !== undefined) {
     if (!input.name || input.name.trim().length === 0) {
       throw new ValidationError('name is required', 'name');
+    }
+    if (input.name.length > MAX_NAME_LENGTH) {
+      throw new ValidationError(`name cannot exceed ${MAX_NAME_LENGTH} characters`, 'name');
     }
   }
 

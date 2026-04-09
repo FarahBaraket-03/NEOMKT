@@ -10,6 +10,8 @@ interface UpdateBrandInput {
   foundedYear?: number | null;
 }
 
+const MAX_NAME_LENGTH = 100;
+
 function validateFoundedYear(year: number): void {
   const currentYear = new Date().getFullYear();
   if (year < 1800 || year > currentYear) {
@@ -21,14 +23,22 @@ export function validateCreateBrandInput(input: CreateBrandInput): void {
   if (!input.name || input.name.trim().length === 0) {
     throw new ValidationError('name is required', 'name');
   }
+  if (input.name.length > MAX_NAME_LENGTH) {
+    throw new ValidationError(`name cannot exceed ${MAX_NAME_LENGTH} characters`, 'name');
+  }
   if (typeof input.foundedYear === 'number') {
     validateFoundedYear(input.foundedYear);
   }
 }
 
 export function validateUpdateBrandInput(input: UpdateBrandInput): void {
-  if (typeof input.name === 'string' && input.name.trim().length === 0) {
-    throw new ValidationError('name cannot be empty', 'name');
+  if (typeof input.name === 'string') {
+    if (input.name.trim().length === 0) {
+      throw new ValidationError('name cannot be empty', 'name');
+    }
+    if (input.name.length > MAX_NAME_LENGTH) {
+      throw new ValidationError(`name cannot exceed ${MAX_NAME_LENGTH} characters`, 'name');
+    }
   }
   if (typeof input.foundedYear === 'number') {
     validateFoundedYear(input.foundedYear);

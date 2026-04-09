@@ -4,33 +4,58 @@ import { validateCreateReviewInput } from '../../src/validators/review.js';
 import { validateCreateBrandInput } from '../../src/validators/brand.js';
 
 describe('validators', () => {
-  it('rejects negative product price', () => {
-    expect(() =>
-      validateCreateProductInput({
-        name: 'x',
-        slug: 'valid-slug',
-        price: -1,
-        stock: 2,
-      }),
-    ).toThrow();
+  describe('Product', () => {
+    it('rejects negative product price', () => {
+      expect(() =>
+        validateCreateProductInput({
+          name: 'x',
+          slug: 'valid-slug',
+          price: -1,
+          stock: 2,
+        }),
+      ).toThrow();
+    });
+
+    it('rejects overly long name', () => {
+      expect(() =>
+        validateCreateProductInput({
+          name: 'a'.repeat(201),
+          slug: 'valid-slug',
+          price: 10,
+          stock: 2,
+        }),
+      ).toThrow(/name cannot exceed/);
+    });
   });
 
-  it('rejects invalid review rating', () => {
-    expect(() =>
-      validateCreateReviewInput({
-        rating: 8,
-        comment: 'bad',
-      }),
-    ).toThrow();
+  describe('Review', () => {
+    it('rejects invalid review rating', () => {
+      expect(() =>
+        validateCreateReviewInput({
+          rating: 8,
+          comment: 'bad',
+        }),
+      ).toThrow();
+    });
   });
 
-  it('accepts valid brand input', () => {
-    expect(() =>
-      validateCreateBrandInput({
-        name: 'Test',
-        foundedYear: 2000,
-      }),
-    ).not.toThrow();
+  describe('Brand', () => {
+    it('accepts valid brand input', () => {
+      expect(() =>
+        validateCreateBrandInput({
+          name: 'Test',
+          foundedYear: 2000,
+        }),
+      ).not.toThrow();
+    });
+
+    it('rejects overly long name', () => {
+      expect(() =>
+        validateCreateBrandInput({
+          name: 'a'.repeat(101),
+        }),
+      ).toThrow(/name cannot exceed/);
+    });
   });
 
   it('rejects overly long product description', () => {
