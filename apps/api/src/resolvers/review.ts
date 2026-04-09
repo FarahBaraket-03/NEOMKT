@@ -1,4 +1,3 @@
-import sanitizeHtml from 'sanitize-html';
 import type { GraphQLContext } from '../types/context.js';
 import type { ReviewRow } from '../lib/models.js';
 import { mapReview } from '../lib/mappers.js';
@@ -13,6 +12,7 @@ import {
   validateUpdateReviewInput,
 } from '../validators/review.js';
 import { pubsub } from '../lib/pubsub.js';
+import { sanitizeText, sanitizeOptionalText } from '../utils/sanitization.js';
 
 interface CreateReviewInput {
   productId: string;
@@ -35,11 +35,6 @@ const MAX_REVIEWS_PER_HOUR = 3;
 const REVIEW_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const DEFAULT_REVIEW_PAGE_SIZE = 20;
 const MAX_REVIEW_PAGE_SIZE = 100;
-const REVIEW_TEXT_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
-  allowedTags: [],
-  allowedAttributes: {},
-  disallowedTagsMode: 'discard',
-};
 
 interface ReviewPaginationArgs {
   productId?: string;
@@ -51,40 +46,19 @@ interface ReviewCountArgs {
   productId?: string;
 }
 
-function sanitizeReviewText(value: string): string {
-  return sanitizeHtml(value, REVIEW_TEXT_SANITIZE_OPTIONS)
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-    .trim();
-}
-
-function sanitizeOptionalReviewText(
-  value: string | null | undefined,
-): string | null | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  if (value === null) {
-    return null;
-  }
-
-  const sanitized = sanitizeReviewText(value);
-  return sanitized.length > 0 ? sanitized : null;
-}
-
 function sanitizeCreateReviewInput(input: CreateReviewInput): CreateReviewInput {
   return {
     ...input,
-    title: sanitizeOptionalReviewText(input.title),
-    comment: sanitizeReviewText(input.comment),
+    title: sanitizeOptionalText(input.title),
+    comment: sanitizeText(input.comment),
   };
 }
 
 function sanitizeUpdateReviewInput(input: UpdateReviewInput): UpdateReviewInput {
   return {
     ...(input.rating !== undefined ? { rating: input.rating } : {}),
-    ...(input.title !== undefined ? { title: sanitizeOptionalReviewText(input.title) } : {}),
-    ...(input.comment !== undefined ? { comment: sanitizeReviewText(input.comment) } : {}),
+    ...(input.title !== undefined ? { title: sanitizeOptionalText(input.title) } : {}),
+    ...(input.comment !== undefined ? { comment: sanitizeText(input.comment) } : {}),
   };
 }
 

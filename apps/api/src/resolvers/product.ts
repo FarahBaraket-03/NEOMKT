@@ -13,6 +13,7 @@ import {
   validateUpdateProductInput,
 } from '../validators/product.js';
 import { pubsub } from '../lib/pubsub.js';
+import { sanitizeOptionalText } from '../utils/sanitization.js';
 
 interface ProductFilterArgs {
   brandId?: string;
@@ -224,11 +225,15 @@ export const productResolvers = {
       args: { input: ProductInput },
       ctx: GraphQLContext,
     ) => {
-      validateCreateProductInput(args.input);
+      const sanitizedInput: ProductInput = {
+        ...args.input,
+        description: sanitizeOptionalText(args.input.description),
+      };
+      validateCreateProductInput(sanitizedInput);
 
       const { data, error } = await ctx.supabase
         .from('products')
-        .insert(toDbProductInput(args.input))
+        .insert(toDbProductInput(sanitizedInput))
         .select('*')
         .single();
 
@@ -245,7 +250,13 @@ export const productResolvers = {
       args: { id: string; input: ProductInput },
       ctx: GraphQLContext,
     ) => {
-      validateUpdateProductInput(args.input);
+      const sanitizedInput: ProductInput = {
+        ...args.input,
+        ...(args.input.description !== undefined
+          ? { description: sanitizeOptionalText(args.input.description) }
+          : {}),
+      };
+      validateUpdateProductInput(sanitizedInput);
 
       const { data: currentData, error: currentError } = await ctx.supabase
         .from('products')
@@ -261,7 +272,7 @@ export const productResolvers = {
 
       const { data, error } = await ctx.supabase
         .from('products')
-        .update(toDbProductInput(args.input))
+        .update(toDbProductInput(sanitizedInput))
         .eq('id', args.id)
         .select('*')
         .single();

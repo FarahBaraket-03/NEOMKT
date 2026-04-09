@@ -5,10 +5,15 @@ interface ProductInputBase {
   price?: number;
   stock?: number;
   slug?: string;
+  description?: string | null;
 }
 
 const SLUG_REGEX = /^[a-z0-9-]+$/;
+
+const MAX_DESCRIPTION_LENGTH = 5000;
+
 const MAX_NAME_LENGTH = 200;
+
 
 function validateCoreFields(input: ProductInputBase, allowPartial: boolean): void {
   if (!allowPartial || input.name !== undefined) {
@@ -35,6 +40,15 @@ function validateCoreFields(input: ProductInputBase, allowPartial: boolean): voi
   if (!allowPartial || input.slug !== undefined) {
     if (!input.slug || !SLUG_REGEX.test(input.slug)) {
       throw new ValidationError('slug must match /^[a-z0-9-]+$/', 'slug');
+    }
+  }
+
+  if (input.description !== undefined && input.description !== null) {
+    if (input.description.length > MAX_DESCRIPTION_LENGTH) {
+      throw new ValidationError(
+        `description cannot exceed ${MAX_DESCRIPTION_LENGTH} characters`,
+        'description',
+      );
     }
   }
 }
