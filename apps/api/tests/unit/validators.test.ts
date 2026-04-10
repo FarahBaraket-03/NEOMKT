@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { validateCreateProductInput } from '../../src/validators/product.js';
 import { validateCreateReviewInput } from '../../src/validators/review.js';
 import { validateCreateBrandInput } from '../../src/validators/brand.js';
+import { validateCreateCategoryInput } from '../../src/validators/category.js';
 
 describe('validators', () => {
   describe('Product', () => {
@@ -55,6 +56,16 @@ describe('validators', () => {
           name: 'a'.repeat(101),
         }),
       ).toThrow(/name cannot exceed/);
+    });
+  });
+
+  describe('Category', () => {
+    it('rejects overly long description', () => {
+      expect(() =>
+        validateCreateCategoryInput({
+          description: 'a'.repeat(5001),
+        }),
+      ).toThrow(/description cannot exceed 5000 characters/);
     });
   });
 
