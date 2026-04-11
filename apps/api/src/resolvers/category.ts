@@ -3,6 +3,11 @@ import type { CategoryRow } from '../lib/models.js';
 import { mapCategory } from '../lib/mappers.js';
 import { adminMutation } from '../utils/adminMutation.js';
 import { handleDatabaseError } from '../utils/errors.js';
+import {
+  validateCreateCategoryInput,
+  validateUpdateCategoryInput,
+} from '../validators/category.js';
+import { sanitizeText, sanitizeOptionalText } from '../utils/sanitization.js';
 
 interface CategoryInput {
   name?: string;
@@ -58,9 +63,16 @@ export const categoryResolvers = {
       args: { input: CategoryInput },
       ctx: GraphQLContext,
     ) => {
+      const sanitizedInput = {
+        ...args.input,
+        name: args.input.name ? sanitizeText(args.input.name) : undefined,
+        description: sanitizeOptionalText(args.input.description),
+      };
+      validateCreateCategoryInput(sanitizedInput);
+
       const { data, error } = await ctx.supabase
         .from('categories')
-        .insert(toDbCategoryInput(args.input))
+        .insert(toDbCategoryInput(sanitizedInput))
         .select('*')
         .single();
 
@@ -75,9 +87,18 @@ export const categoryResolvers = {
       args: { id: string; input: CategoryInput },
       ctx: GraphQLContext,
     ) => {
+      const sanitizedInput = {
+        ...args.input,
+        ...(args.input.name !== undefined ? { name: sanitizeText(args.input.name) } : {}),
+        ...(args.input.description !== undefined
+          ? { description: sanitizeOptionalText(args.input.description) }
+          : {}),
+      };
+      validateUpdateCategoryInput(sanitizedInput);
+
       const { data, error } = await ctx.supabase
         .from('categories')
-        .update(toDbCategoryInput(args.input))
+        .update(toDbCategoryInput(sanitizedInput))
         .eq('id', args.id)
         .select('*')
         .single();
