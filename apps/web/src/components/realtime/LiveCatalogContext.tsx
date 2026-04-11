@@ -18,7 +18,7 @@ import {
   PRODUCT_UPDATED_SUBSCRIPTION,
 } from '@/gql/documents';
 
-type LiveUpdateKind = 'PRICE_UPDATE' | 'STOCK_UPDATE';
+export type LiveUpdateKind = 'PRICE_UPDATE' | 'STOCK_UPDATE';
 
 type ProductStatus = Product['status'];
 
@@ -66,6 +66,12 @@ interface LiveCatalogContextValue {
   hotProductIds: Record<string, number>;
   activeToast: LiveUpdateEvent | null;
   primeProduct: (product: Product) => void;
+  publishLiveEvent: (event: {
+    kind: LiveUpdateKind;
+    product: LiveProductSnapshot;
+    oldValue: number;
+    newValue: number;
+  }) => void;
   dismissActiveToast: () => void;
 }
 
@@ -271,6 +277,29 @@ export function LiveCatalogProvider({ children }: { children: React.ReactNode })
     setProductsById(nextProducts);
   }, []);
 
+  const publishLiveEvent = React.useCallback(
+    (event: {
+      kind: LiveUpdateKind;
+      product: LiveProductSnapshot;
+      oldValue: number;
+      newValue: number;
+    }) => {
+      const { merged } = upsertSnapshot(event.product);
+
+      pushLiveEvent({
+        id: crypto.randomUUID(),
+        kind: event.kind,
+        productId: merged.id,
+        productName: merged.name,
+        productSlug: merged.slug,
+        oldValue: event.oldValue,
+        newValue: event.newValue,
+        at: Date.now(),
+      });
+    },
+    [pushLiveEvent, upsertSnapshot],
+  );
+
   const { data: productUpdatedData } = useSubscription<ProductUpdatedPayload>(
     PRODUCT_UPDATED_SUBSCRIPTION,
   );
@@ -368,6 +397,7 @@ export function LiveCatalogProvider({ children }: { children: React.ReactNode })
       hotProductIds,
       activeToast,
       primeProduct,
+      publishLiveEvent,
       dismissActiveToast,
     }),
     [
@@ -375,6 +405,7 @@ export function LiveCatalogProvider({ children }: { children: React.ReactNode })
       dismissActiveToast,
       hotProductIds,
       primeProduct,
+      publishLiveEvent,
       productsById,
       recentEventsByProductId,
     ],

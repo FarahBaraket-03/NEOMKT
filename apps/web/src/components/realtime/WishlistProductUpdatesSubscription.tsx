@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { useToast } from '@/components/ui/Toast';
 import {
   GET_USER_WISHLIST,
-  PRODUCT_UPDATED_SUBSCRIPTION,
+  PRICE_UPDATED_SUBSCRIPTION,
+  PRODUCT_STOCK_CHANGED_SUBSCRIPTION,
 } from '@/gql/documents';
+import { useLiveCatalog } from './LiveCatalogContext';
 
 interface WishlistQueryData {
   wishlist: Array<{
@@ -15,10 +16,29 @@ interface WishlistQueryData {
   }>;
 }
 
-interface ProductUpdatedPayload {
-  productUpdated?: {
+interface ProductStockChangedPayload {
+  productStockChanged?: {
     id: string;
     name: string;
+    slug: string;
+    stock: number;
+    price: number;
+    status: 'ACTIVE' | 'DISCONTINUED' | 'OUT_OF_STOCK';
+  } | null;
+}
+
+interface PriceUpdatedPayload {
+  priceUpdated?: {
+    oldPrice: number;
+    newPrice: number;
+    product: {
+      id: string;
+      name: string;
+      slug: string;
+      stock: number;
+      price: number;
+      status: 'ACTIVE' | 'DISCONTINUED' | 'OUT_OF_STOCK';
+    };
   } | null;
 }
 
@@ -28,9 +48,10 @@ function toWishlistIds(data: WishlistQueryData | undefined): Set<string> {
 
 export default function WishlistProductUpdatesSubscription() {
   const { user } = useAuth();
-  const { pushToast } = useToast();
+  const { productsById, publishLiveEvent } = useLiveCatalog();
   const client = useApolloClient();
   const [wishlistProductIds, setWishlistProductIds] = useState<Set<string>>(new Set());
+  const lastEventKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -63,31 +84,67 @@ export default function WishlistProductUpdatesSubscription() {
       return;
     }
 
-    const observable = client.subscribe<ProductUpdatedPayload>({
-      query: PRODUCT_UPDATED_SUBSCRIPTION,
+    const stockObservable = client.subscribe<ProductStockChangedPayload>({
+      query: PRODUCT_STOCK_CHANGED_SUBSCRIPTION,
     });
 
-    const subscription = observable.subscribe({
+    const stockSubscription = stockObservable.subscribe({
       next: ({ data }) => {
-        const updatedProduct = data?.productUpdated;
+        const updatedProduct = data?.productStockChanged;
         if (!updatedProduct || !wishlistProductIds.has(updatedProduct.id)) {
           return;
         }
 
-        pushToast({
-          title: 'WISHLIST LIVE SIGNAL',
-          description: `${updatedProduct.name} received an update.`,
-          variant: 'info',
-        });
+        const eventKey = `stock:${updatedProduct.id}:${updatedProduct.stock}`;
+        if (lastEventKeyRef.current === eventKey) {
+          return;
+        }
+        lastEventKeyRef.current = eventKey;
 
-        void client.refetchQueries({ include: 'active' });
+        const previous = productsById[updatedProduct.id];
+
+        publishLiveEvent({
+          kind: 'STOCK_UPDATE',
+          product: updatedProduct,
+          oldValue: previous?.stock ?? updatedProduct.stock,
+          newValue: updatedProduct.stock,
+        });
+      },
+    });
+
+    const priceObservable = client.subscribe<PriceUpdatedPayload>({
+      query: PRICE_UPDATED_SUBSCRIPTION,
+    });
+
+    const priceSubscription = priceObservable.subscribe({
+      next: ({ data }) => {
+        const payload = data?.priceUpdated;
+        const updatedProduct = payload?.product;
+
+        if (!payload || !updatedProduct || !wishlistProductIds.has(updatedProduct.id)) {
+          return;
+        }
+
+        const eventKey = `price:${updatedProduct.id}:${payload.newPrice}`;
+        if (lastEventKeyRef.current === eventKey) {
+          return;
+        }
+        lastEventKeyRef.current = eventKey;
+
+        publishLiveEvent({
+          kind: 'PRICE_UPDATE',
+          product: updatedProduct,
+          oldValue: payload.oldPrice,
+          newValue: payload.newPrice,
+        });
       },
     });
 
     return () => {
-      subscription.unsubscribe();
+      stockSubscription.unsubscribe();
+      priceSubscription.unsubscribe();
     };
-  }, [client, pushToast, user, wishlistProductIds]);
+  }, [client, productsById, publishLiveEvent, user, wishlistProductIds]);
 
   return null;
 }
