@@ -63,6 +63,12 @@ interface ErrorResponse {
   errors?: Array<{ message: string }>;
 }
 
+interface ProductStockSignal {
+  id?: string;
+  name?: string;
+  stock?: number;
+}
+
 function formatSubscriptionError(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -98,6 +104,18 @@ function normalizeRole(value: unknown): UserRole | null {
   }
 
   return null;
+}
+
+function formatLiveInventorySignal(product: ProductStockSignal): string {
+  const productName = product.name?.trim() || product.id || 'unknown product';
+  const stockUnits = typeof product.stock === 'number' ? product.stock : 0;
+  const inventoryStatus = stockUnits > 0 ? 'RESTOCKED' : 'OUT OF STOCK';
+
+  return [
+    'LIVE_UPDATE',
+    productName,
+    `INVENTORY STATUS: ${inventoryStatus} (${stockUnits} UNITS)`,
+  ].join('\n');
 }
 
 export default function ApiDocsPage() {
@@ -392,7 +410,7 @@ export default function ApiDocsPage() {
       ),
     },
     subscriptionProductStockChanged: {
-      label: 'subscriptionStockByProduct',
+      label: 'subscriptionProductStockChanged',
       operationType: 'subscription',
       requiresAuth: true,
       query: `subscription ProductStockChanged($productId: ID) {\n  productStockChanged(productId: $productId) {\n    id\n    name\n    slug\n    stock\n    status\n    updatedAt\n  }\n}`,
@@ -405,7 +423,7 @@ export default function ApiDocsPage() {
           <p className="pl-4 font-mono text-sm text-mutedForeground">productStockChanged(productId: ID): <span className="text-white">Product</span></p>
           <p className="font-mono mb-4">{'}'}</p>
           <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
-            Real-time stock feed for a specific product (ideal for wishlist watch behavior).
+            Real-time stock feed for a specific product. Use this for live inventory update signals.
           </p>
         </>
       ),
@@ -957,6 +975,24 @@ export default function ApiDocsPage() {
             next: (payload) => {
               eventCount += 1;
               setResponse((previous) => {
+                if (activeQuery === 'subscriptionProductStockChanged') {
+                  const stockSignal = (payload as {
+                    data?: { productStockChanged?: ProductStockSignal };
+                  })
+                    .data
+                    ?.productStockChanged;
+
+                  if (stockSignal) {
+                    const line = formatLiveInventorySignal(stockSignal);
+
+                    if (!previous || previous.length === 0) {
+                      return line;
+                    }
+
+                    return `${previous}\n\n${line}`;
+                  }
+                }
+
                 const line = JSON.stringify(payload, null, 2);
                 if (!previous || previous.length === 0) {
                   return `EVENT #${eventCount}\n${line}`;
