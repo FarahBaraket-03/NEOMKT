@@ -12,6 +12,18 @@ import Card, { CardContent } from '@/components/ui/Card';
 import CreateReviewForm from '@/components/reviews/CreateReviewForm';
 import ReviewsList from './ReviewsList';
 
+function mergeReviews(primary: ProductReview[], secondary: ProductReview[]): ProductReview[] {
+  const byId = new Map<string, ProductReview>();
+
+  for (const review of [...primary, ...secondary]) {
+    byId.set(review.id, review);
+  }
+
+  return Array.from(byId.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+}
+
 export default function ProductReviewsPanel({
   reviews,
   productId,
@@ -22,7 +34,7 @@ export default function ProductReviewsPanel({
   const { user } = useAuth();
   const { pushToast } = useToast();
   const [liveReviews, setLiveReviews] = useState<ProductReview[]>(reviews);
-  const { data, refetch } = useQuery(GET_REVIEWS, {
+  const { data } = useQuery(GET_REVIEWS, {
     variables: { productId },
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'cache-first',
@@ -35,7 +47,7 @@ export default function ProductReviewsPanel({
   useEffect(() => {
     const freshReviews = data?.reviews as ProductReview[] | undefined;
     if (freshReviews) {
-      setLiveReviews(freshReviews);
+      setLiveReviews((previous) => mergeReviews(freshReviews, previous));
     }
   }, [data]);
 
@@ -45,11 +57,7 @@ export default function ProductReviewsPanel({
         <CreateReviewForm
           productId={productId}
           onCreated={(review) => {
-            setLiveReviews((prev) => {
-              const withoutCurrent = prev.filter((item) => item.id !== review.id);
-              return [review, ...withoutCurrent];
-            });
-            void refetch();
+            setLiveReviews((previous) => mergeReviews([review], previous));
             pushToast({
               title: 'REVIEW SUBMITTED',
               description: 'Your review is now visible.',
