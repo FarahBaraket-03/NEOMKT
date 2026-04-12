@@ -44,6 +44,7 @@ describe('validators', () => {
       expect(() =>
         validateCreateBrandInput({
           name: 'Test',
+          slug: 'test',
           foundedYear: 2000,
         }),
       ).not.toThrow();
@@ -53,8 +54,28 @@ describe('validators', () => {
       expect(() =>
         validateCreateBrandInput({
           name: 'a'.repeat(101),
+          slug: 'test',
         }),
       ).toThrow(/name cannot exceed/);
+    });
+
+    it('rejects invalid slug', () => {
+      expect(() =>
+        validateCreateBrandInput({
+          name: 'Test',
+          slug: 'Invalid Slug!',
+        }),
+      ).toThrow(/slug must match/);
+    });
+
+    it('rejects overly long description', () => {
+      expect(() =>
+        validateCreateBrandInput({
+          name: 'Test',
+          slug: 'test',
+          description: 'a'.repeat(5001),
+        }),
+      ).toThrow(/description cannot exceed 5000 characters/);
     });
   });
 

@@ -7,6 +7,7 @@ import {
   validateCreateBrandInput,
   validateUpdateBrandInput,
 } from '../validators/brand.js';
+import { sanitizeText, sanitizeOptionalText } from '../utils/sanitization.js';
 
 interface CreateBrandInput {
   name: string;
@@ -26,6 +27,16 @@ interface UpdateBrandInput {
   websiteUrl?: string | null;
   foundedYear?: number | null;
   description?: string | null;
+}
+
+function sanitizeBrandInput<T extends CreateBrandInput | UpdateBrandInput>(input: T): T {
+  return {
+    ...input,
+    ...(input.name !== undefined ? { name: sanitizeText(input.name) } : {}),
+    ...(input.slug !== undefined ? { slug: sanitizeText(input.slug) } : {}),
+    ...(input.country !== undefined ? { country: sanitizeOptionalText(input.country) } : {}),
+    ...(input.description !== undefined ? { description: sanitizeOptionalText(input.description) } : {}),
+  };
 }
 
 function toDbBrandInput(input: CreateBrandInput | UpdateBrandInput): Record<string, unknown> {
@@ -68,11 +79,12 @@ export const brandResolvers = {
       args: { input: CreateBrandInput },
       ctx: GraphQLContext,
     ) => {
-      validateCreateBrandInput(args.input);
+      const sanitizedInput = sanitizeBrandInput(args.input);
+      validateCreateBrandInput(sanitizedInput);
 
       const { data, error } = await ctx.supabase
         .from('brands')
-        .insert(toDbBrandInput(args.input))
+        .insert(toDbBrandInput(sanitizedInput))
         .select('*')
         .single();
 
@@ -86,11 +98,12 @@ export const brandResolvers = {
       args: { id: string; input: UpdateBrandInput },
       ctx: GraphQLContext,
     ) => {
-      validateUpdateBrandInput(args.input);
+      const sanitizedInput = sanitizeBrandInput(args.input);
+      validateUpdateBrandInput(sanitizedInput);
 
       const { data, error } = await ctx.supabase
         .from('brands')
-        .update(toDbBrandInput(args.input))
+        .update(toDbBrandInput(sanitizedInput))
         .eq('id', args.id)
         .select('*')
         .single();
