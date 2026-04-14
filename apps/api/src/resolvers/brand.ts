@@ -7,6 +7,7 @@ import {
   validateCreateBrandInput,
   validateUpdateBrandInput,
 } from '../validators/brand.js';
+import { sanitizeOptionalText } from '../utils/sanitization.js';
 
 interface CreateBrandInput {
   name: string;
@@ -68,11 +69,15 @@ export const brandResolvers = {
       args: { input: CreateBrandInput },
       ctx: GraphQLContext,
     ) => {
-      validateCreateBrandInput(args.input);
+      const sanitizedInput = {
+        ...args.input,
+        description: sanitizeOptionalText(args.input.description),
+      };
+      validateCreateBrandInput(sanitizedInput);
 
       const { data, error } = await ctx.supabase
         .from('brands')
-        .insert(toDbBrandInput(args.input))
+        .insert(toDbBrandInput(sanitizedInput))
         .select('*')
         .single();
 
@@ -86,11 +91,17 @@ export const brandResolvers = {
       args: { id: string; input: UpdateBrandInput },
       ctx: GraphQLContext,
     ) => {
-      validateUpdateBrandInput(args.input);
+      const sanitizedInput = {
+        ...args.input,
+        ...(args.input.description !== undefined
+          ? { description: sanitizeOptionalText(args.input.description) }
+          : {}),
+      };
+      validateUpdateBrandInput(sanitizedInput);
 
       const { data, error } = await ctx.supabase
         .from('brands')
-        .update(toDbBrandInput(args.input))
+        .update(toDbBrandInput(sanitizedInput))
         .eq('id', args.id)
         .select('*')
         .single();

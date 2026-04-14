@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { validateCreateProductInput } from '../../src/validators/product.js';
 import { validateCreateReviewInput } from '../../src/validators/review.js';
 import { validateCreateBrandInput } from '../../src/validators/brand.js';
+import { validateCreateCategoryInput } from '../../src/validators/category.js';
 
 describe('validators', () => {
   describe('Product', () => {
@@ -44,6 +45,7 @@ describe('validators', () => {
       expect(() =>
         validateCreateBrandInput({
           name: 'Test',
+          slug: 'test-brand',
           foundedYear: 2000,
         }),
       ).not.toThrow();
@@ -53,8 +55,67 @@ describe('validators', () => {
       expect(() =>
         validateCreateBrandInput({
           name: 'a'.repeat(101),
+          slug: 'valid-slug',
         }),
       ).toThrow(/name cannot exceed/);
+    });
+
+    it('rejects invalid slug', () => {
+      expect(() =>
+        validateCreateBrandInput({
+          name: 'Test',
+          slug: 'Invalid Slug',
+        }),
+      ).toThrow(/slug must match/);
+    });
+
+    it('rejects overly long description', () => {
+      expect(() =>
+        validateCreateBrandInput({
+          name: 'Test',
+          slug: 'test-brand',
+          description: 'a'.repeat(5001),
+        }),
+      ).toThrow(/description cannot exceed 5000 characters/);
+    });
+  });
+
+  describe('Category', () => {
+    it('accepts valid category input', () => {
+      expect(() =>
+        validateCreateCategoryInput({
+          name: 'Test Category',
+          slug: 'test-category',
+        }),
+      ).not.toThrow();
+    });
+
+    it('rejects invalid slug', () => {
+      expect(() =>
+        validateCreateCategoryInput({
+          name: 'Test Category',
+          slug: 'invalid slug!',
+        }),
+      ).toThrow(/slug must match/);
+    });
+
+    it('rejects overly long name', () => {
+      expect(() =>
+        validateCreateCategoryInput({
+          name: 'a'.repeat(101),
+          slug: 'valid-slug',
+        }),
+      ).toThrow(/name cannot exceed/);
+    });
+
+    it('rejects overly long description', () => {
+      expect(() =>
+        validateCreateCategoryInput({
+          name: 'Test Category',
+          slug: 'test-category',
+          description: 'a'.repeat(5001),
+        }),
+      ).toThrow(/description cannot exceed 5000 characters/);
     });
   });
 

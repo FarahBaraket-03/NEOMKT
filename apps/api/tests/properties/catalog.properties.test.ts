@@ -350,6 +350,7 @@ describe('graphql-tech-catalog properties', () => {
     expect(() =>
       validateCreateBrandInput({
         name: 'Valid Brand',
+        slug: 'valid-brand',
         foundedYear: 2001,
       }),
     ).not.toThrow();
