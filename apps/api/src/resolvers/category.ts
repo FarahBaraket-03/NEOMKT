@@ -3,6 +3,11 @@ import type { CategoryRow } from '../lib/models.js';
 import { mapCategory } from '../lib/mappers.js';
 import { adminMutation } from '../utils/adminMutation.js';
 import { handleDatabaseError } from '../utils/errors.js';
+import {
+  validateCreateCategoryInput,
+  validateUpdateCategoryInput,
+} from '../validators/category.js';
+import { sanitizeText, sanitizeOptionalText } from '../utils/sanitization.js';
 
 interface CategoryInput {
   name?: string;
@@ -27,6 +32,16 @@ function toDbCategoryInput(input: CategoryInput): Record<string, unknown> {
     ...(input.description !== undefined ? { description: input.description } : {}),
     ...(input.parentId !== undefined ? { parent_id: input.parentId } : {}),
     ...(input.icon !== undefined ? { icon: input.icon } : {}),
+  };
+}
+
+function sanitizeCategoryInput(input: CategoryInput): CategoryInput {
+  return {
+    ...input,
+    ...(input.name !== undefined ? { name: sanitizeText(input.name) } : {}),
+    ...(input.description !== undefined
+      ? { description: sanitizeOptionalText(input.description) }
+      : {}),
   };
 }
 
@@ -58,9 +73,12 @@ export const categoryResolvers = {
       args: { input: CategoryInput },
       ctx: GraphQLContext,
     ) => {
+      const sanitizedInput = sanitizeCategoryInput(args.input);
+      validateCreateCategoryInput(sanitizedInput);
+
       const { data, error } = await ctx.supabase
         .from('categories')
-        .insert(toDbCategoryInput(args.input))
+        .insert(toDbCategoryInput(sanitizedInput))
         .select('*')
         .single();
 
@@ -75,9 +93,12 @@ export const categoryResolvers = {
       args: { id: string; input: CategoryInput },
       ctx: GraphQLContext,
     ) => {
+      const sanitizedInput = sanitizeCategoryInput(args.input);
+      validateUpdateCategoryInput(sanitizedInput);
+
       const { data, error } = await ctx.supabase
         .from('categories')
-        .update(toDbCategoryInput(args.input))
+        .update(toDbCategoryInput(sanitizedInput))
         .eq('id', args.id)
         .select('*')
         .single();
