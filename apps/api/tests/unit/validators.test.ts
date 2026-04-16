@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { validateCreateProductInput } from '../../src/validators/product.js';
 import { validateCreateReviewInput } from '../../src/validators/review.js';
 import { validateCreateBrandInput } from '../../src/validators/brand.js';
+import { validateCreateCategoryInput } from '../../src/validators/category.js';
 
 describe('validators', () => {
   describe('Product', () => {
@@ -55,6 +56,35 @@ describe('validators', () => {
           name: 'a'.repeat(101),
         }),
       ).toThrow(/name cannot exceed/);
+    });
+  });
+
+  describe('Category', () => {
+    it('accepts valid category input', () => {
+      expect(() =>
+        validateCreateCategoryInput({
+          name: 'Laptops',
+          slug: 'laptops',
+        }),
+      ).not.toThrow();
+    });
+
+    it('rejects invalid slug', () => {
+      expect(() =>
+        validateCreateCategoryInput({
+          name: 'Laptops',
+          slug: 'Laptops!',
+        }),
+      ).toThrow(/slug must match/);
+    });
+
+    it('rejects overly long name', () => {
+      expect(() =>
+        validateCreateCategoryInput({
+          name: 'a'.repeat(101),
+          slug: 'valid-slug',
+        }),
+      ).toThrow(/name cannot exceed 100 characters/);
     });
   });
 
