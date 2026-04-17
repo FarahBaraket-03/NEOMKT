@@ -28,7 +28,10 @@ export class ValidationError extends GraphQLError {
 }
 
 export class DatabaseError extends GraphQLError {
-  constructor(message = 'An internal database error occurred') {
+  constructor(
+    message = 'An internal database error occurred',
+    public originalError?: unknown,
+  ) {
     super(message, {
       extensions: {
         code: 'INTERNAL_SERVER_ERROR',
@@ -61,5 +64,5 @@ export function handleDatabaseError(error: unknown): never {
     throw new ValidationError('Value does not meet validation requirements');
   }
 
-  throw new DatabaseError(dbError.message ?? 'An internal database error occurred');
+  throw new DatabaseError('An internal database error occurred', error);
 }
