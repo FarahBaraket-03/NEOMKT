@@ -370,9 +370,16 @@ const mutationRateLimiter = rateLimit({
   skip: (req) => !isMutationRequest(req),
 });
 
-const app = express();
+export const app = express();
 // API is deployed behind a reverse proxy (e.g. Render), so trust one hop.
 app.set('trust proxy', 1);
+
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  next();
+});
+
 const httpServer = http.createServer(app);
 
 const schema = createSchema(
