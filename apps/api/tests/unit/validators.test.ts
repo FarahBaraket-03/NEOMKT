@@ -3,6 +3,7 @@ import { validateCreateProductInput } from '../../src/validators/product.js';
 import { validateCreateReviewInput } from '../../src/validators/review.js';
 import { validateCreateBrandInput } from '../../src/validators/brand.js';
 import { validateCreateCategoryInput } from '../../src/validators/category.js';
+import { validateCreateProductSpecInput } from '../../src/validators/spec.js';
 
 describe('validators', () => {
   describe('Product', () => {
@@ -119,5 +120,69 @@ describe('validators', () => {
         description: 'a'.repeat(5001),
       }),
     ).toThrow(/description cannot exceed 5000 characters/);
+  });
+
+  describe('ProductSpec', () => {
+    it('accepts valid product spec input', () => {
+      expect(() =>
+        validateCreateProductSpecInput({
+          productId: 'p1',
+          key: 'Battery',
+          value: '5000mAh',
+          displayOrder: 1,
+        }),
+      ).not.toThrow();
+    });
+
+    it('rejects missing productId', () => {
+      expect(() =>
+        validateCreateProductSpecInput({
+          key: 'Battery',
+          value: '5000mAh',
+        }),
+      ).toThrow(/productId is required/);
+    });
+
+    it('rejects overly long key', () => {
+      expect(() =>
+        validateCreateProductSpecInput({
+          productId: 'p1',
+          key: 'a'.repeat(101),
+          value: 'v',
+        }),
+      ).toThrow(/key cannot exceed 100 characters/);
+    });
+
+    it('rejects overly long value', () => {
+      expect(() =>
+        validateCreateProductSpecInput({
+          productId: 'p1',
+          key: 'k',
+          value: 'a'.repeat(1001),
+        }),
+      ).toThrow(/value cannot exceed 1000 characters/);
+    });
+
+    it('rejects overly long unit', () => {
+      expect(() =>
+        validateCreateProductSpecInput({
+          productId: 'p1',
+          key: 'k',
+          value: 'v',
+          unit: 'a'.repeat(51),
+        }),
+      ).toThrow(/unit cannot exceed 50 characters/);
+    });
+
+    it('rejects negative displayOrder', () => {
+      expect(() =>
+        validateCreateProductSpecInput({
+          productId: 'p1',
+          key: 'k',
+          value: 'v',
+          displayOrder: -1,
+        }),
+      ).toThrow(/displayOrder must be a non-negative integer/);
+    });
   });
 });
