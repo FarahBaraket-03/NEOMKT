@@ -3,6 +3,11 @@ import type { ProductSpecRow } from '../lib/models.js';
 import { mapProductSpec } from '../lib/mappers.js';
 import { adminMutation } from '../utils/adminMutation.js';
 import { handleDatabaseError } from '../utils/errors.js';
+import { sanitizeText, sanitizeOptionalText } from '../utils/sanitization.js';
+import {
+  validateCreateProductSpecInput,
+  validateUpdateProductSpecInput,
+} from '../validators/spec.js';
 
 interface ProductSpecInput {
   productId?: string;
@@ -19,6 +24,15 @@ function toDbSpecInput(input: ProductSpecInput): Record<string, unknown> {
     ...(input.value !== undefined ? { value: input.value } : {}),
     ...(input.unit !== undefined ? { unit: input.unit } : {}),
     ...(input.displayOrder !== undefined ? { display_order: input.displayOrder } : {}),
+  };
+}
+
+function sanitizeSpecInput(input: ProductSpecInput): ProductSpecInput {
+  return {
+    ...input,
+    ...(input.key !== undefined ? { key: sanitizeText(input.key) } : {}),
+    ...(input.value !== undefined ? { value: sanitizeText(input.value) } : {}),
+    ...(input.unit !== undefined ? { unit: sanitizeOptionalText(input.unit) } : {}),
   };
 }
 
@@ -44,9 +58,12 @@ export const specResolvers = {
       args: { input: ProductSpecInput },
       ctx: GraphQLContext,
     ) => {
+      const sanitizedInput = sanitizeSpecInput(args.input);
+      validateCreateProductSpecInput(sanitizedInput);
+
       const { data, error } = await ctx.supabase
         .from('specs')
-        .insert(toDbSpecInput(args.input))
+        .insert(toDbSpecInput(sanitizedInput))
         .select('*')
         .single();
 
@@ -61,9 +78,12 @@ export const specResolvers = {
       args: { id: string; input: ProductSpecInput },
       ctx: GraphQLContext,
     ) => {
+      const sanitizedInput = sanitizeSpecInput(args.input);
+      validateUpdateProductSpecInput(sanitizedInput);
+
       const { data, error } = await ctx.supabase
         .from('specs')
-        .update(toDbSpecInput(args.input))
+        .update(toDbSpecInput(sanitizedInput))
         .eq('id', args.id)
         .select('*')
         .single();
