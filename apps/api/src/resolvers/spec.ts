@@ -3,14 +3,12 @@ import type { ProductSpecRow } from '../lib/models.js';
 import { mapProductSpec } from '../lib/mappers.js';
 import { adminMutation } from '../utils/adminMutation.js';
 import { handleDatabaseError } from '../utils/errors.js';
-
-interface ProductSpecInput {
-  productId?: string;
-  key?: string;
-  value?: string;
-  unit?: string | null;
-  displayOrder?: number;
-}
+import {
+  validateCreateProductSpecInput,
+  validateUpdateProductSpecInput,
+  type ProductSpecInput,
+} from '../validators/spec.js';
+import { sanitizeText, sanitizeOptionalText } from '../utils/sanitization.js';
 
 function toDbSpecInput(input: ProductSpecInput): Record<string, unknown> {
   return {
@@ -19,6 +17,15 @@ function toDbSpecInput(input: ProductSpecInput): Record<string, unknown> {
     ...(input.value !== undefined ? { value: input.value } : {}),
     ...(input.unit !== undefined ? { unit: input.unit } : {}),
     ...(input.displayOrder !== undefined ? { display_order: input.displayOrder } : {}),
+  };
+}
+
+function sanitizeSpecInput(input: ProductSpecInput): ProductSpecInput {
+  return {
+    ...input,
+    ...(input.key !== undefined ? { key: sanitizeText(input.key) } : {}),
+    ...(input.value !== undefined ? { value: sanitizeText(input.value) } : {}),
+    ...(input.unit !== undefined ? { unit: sanitizeOptionalText(input.unit) } : {}),
   };
 }
 
@@ -44,9 +51,12 @@ export const specResolvers = {
       args: { input: ProductSpecInput },
       ctx: GraphQLContext,
     ) => {
+      const sanitized = sanitizeSpecInput(args.input);
+      validateCreateProductSpecInput(sanitized);
+
       const { data, error } = await ctx.supabase
         .from('specs')
-        .insert(toDbSpecInput(args.input))
+        .insert(toDbSpecInput(sanitized))
         .select('*')
         .single();
 
@@ -61,9 +71,12 @@ export const specResolvers = {
       args: { id: string; input: ProductSpecInput },
       ctx: GraphQLContext,
     ) => {
+      const sanitized = sanitizeSpecInput(args.input);
+      validateUpdateProductSpecInput(sanitized);
+
       const { data, error } = await ctx.supabase
         .from('specs')
-        .update(toDbSpecInput(args.input))
+        .update(toDbSpecInput(sanitized))
         .eq('id', args.id)
         .select('*')
         .single();
