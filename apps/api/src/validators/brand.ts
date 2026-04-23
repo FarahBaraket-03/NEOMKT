@@ -13,6 +13,17 @@ export interface BrandInput {
 const SLUG_REGEX = /^[a-z0-9-]+$/;
 const MAX_NAME_LENGTH = 100;
 const MAX_DESC_LENGTH = 5000;
+const MAX_URL_LENGTH = 1000;
+const MAX_COUNTRY_LENGTH = 100;
+
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 function validateCore(input: BrandInput, allowPartial: boolean): void {
   if (!allowPartial || input.name !== undefined) {
@@ -34,6 +45,25 @@ function validateCore(input: BrandInput, allowPartial: boolean): void {
   }
   if (input.description && input.description.length > MAX_DESC_LENGTH) {
     throw new ValidationError(`description cannot exceed ${MAX_DESC_LENGTH} characters`, 'description');
+  }
+  if (input.country && input.country.length > MAX_COUNTRY_LENGTH) {
+    throw new ValidationError(`country cannot exceed ${MAX_COUNTRY_LENGTH} characters`, 'country');
+  }
+  if (input.logoUrl) {
+    if (input.logoUrl.length > MAX_URL_LENGTH) {
+      throw new ValidationError(`logoUrl cannot exceed ${MAX_URL_LENGTH} characters`, 'logoUrl');
+    }
+    if (!isValidUrl(input.logoUrl)) {
+      throw new ValidationError('logoUrl must be a valid HTTP or HTTPS URL', 'logoUrl');
+    }
+  }
+  if (input.websiteUrl) {
+    if (input.websiteUrl.length > MAX_URL_LENGTH) {
+      throw new ValidationError(`websiteUrl cannot exceed ${MAX_URL_LENGTH} characters`, 'websiteUrl');
+    }
+    if (!isValidUrl(input.websiteUrl)) {
+      throw new ValidationError('websiteUrl must be a valid HTTP or HTTPS URL', 'websiteUrl');
+    }
   }
 }
 
