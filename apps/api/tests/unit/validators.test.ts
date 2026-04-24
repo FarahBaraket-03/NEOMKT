@@ -74,6 +74,16 @@ describe('validators', () => {
         }),
       ).toThrow();
     });
+
+    it('rejects overly long title', () => {
+      expect(() =>
+        validateCreateReviewInput({
+          rating: 5,
+          comment: 'This is a valid comment length.',
+          title: 'a'.repeat(201),
+        }),
+      ).toThrow(/title cannot exceed 200 characters/);
+    });
   });
 
   describe('Brand', () => {
