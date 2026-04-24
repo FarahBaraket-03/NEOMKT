@@ -27,6 +27,42 @@ describe('validators', () => {
         }),
       ).toThrow(/name cannot exceed/);
     });
+
+    it('rejects invalid imageUrl', () => {
+      expect(() =>
+        validateCreateProductInput({
+          name: 'x',
+          slug: 'valid-slug',
+          price: 10,
+          stock: 2,
+          imageUrl: 'not-a-url',
+        }),
+      ).toThrow(/imageUrl must be a valid HTTP or HTTPS URL/);
+    });
+
+    it('rejects invalid URL in images array', () => {
+      expect(() =>
+        validateCreateProductInput({
+          name: 'x',
+          slug: 'valid-slug',
+          price: 10,
+          stock: 2,
+          images: ['https://valid.com', 'ftp://invalid.com'],
+        }),
+      ).toThrow(/image URL at index 1 must be a valid HTTP or HTTPS URL/);
+    });
+
+    it('rejects too many images', () => {
+      expect(() =>
+        validateCreateProductInput({
+          name: 'x',
+          slug: 'valid-slug',
+          price: 10,
+          stock: 2,
+          images: Array(11).fill('https://valid.com'),
+        }),
+      ).toThrow(/images cannot exceed 10 items/);
+    });
   });
 
   describe('Review', () => {
@@ -78,6 +114,26 @@ describe('validators', () => {
         }),
       ).toThrow(/description cannot exceed 5000 characters/);
     });
+
+    it('rejects invalid websiteUrl', () => {
+      expect(() =>
+        validateCreateBrandInput({
+          name: 'Test',
+          slug: 'test-brand',
+          websiteUrl: 'javascript:alert(1)',
+        }),
+      ).toThrow(/websiteUrl must be a valid HTTP or HTTPS URL/);
+    });
+
+    it('rejects overly long country', () => {
+      expect(() =>
+        validateCreateBrandInput({
+          name: 'Test',
+          slug: 'test-brand',
+          country: 'a'.repeat(101),
+        }),
+      ).toThrow(/country cannot exceed 100 characters/);
+    });
   });
 
   describe('Category', () => {
@@ -106,6 +162,16 @@ describe('validators', () => {
           slug: 'valid-slug',
         }),
       ).toThrow(/name cannot exceed 100 characters/);
+    });
+
+    it('rejects overly long icon', () => {
+      expect(() =>
+        validateCreateCategoryInput({
+          name: 'Laptops',
+          slug: 'laptops',
+          icon: 'a'.repeat(101),
+        }),
+      ).toThrow(/icon cannot exceed 100 characters/);
     });
   });
 

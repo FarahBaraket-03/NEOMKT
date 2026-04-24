@@ -4,11 +4,13 @@ interface CategoryInputBase {
   name?: string;
   slug?: string;
   description?: string | null;
+  icon?: string | null;
 }
 
 const SLUG_REGEX = /^[a-z0-9-]+$/;
 const MAX_NAME_LENGTH = 100;
 const MAX_DESCRIPTION_LENGTH = 5000;
+const MAX_ICON_LENGTH = 100;
 
 function validateCoreFields(input: CategoryInputBase, allowPartial: boolean): void {
   if (!allowPartial || input.name !== undefined) {
@@ -32,6 +34,12 @@ function validateCoreFields(input: CategoryInputBase, allowPartial: boolean): vo
         `description cannot exceed ${MAX_DESCRIPTION_LENGTH} characters`,
         'description',
       );
+    }
+  }
+
+  if (input.icon !== undefined && input.icon !== null) {
+    if (input.icon.length > MAX_ICON_LENGTH) {
+      throw new ValidationError(`icon cannot exceed ${MAX_ICON_LENGTH} characters`, 'icon');
     }
   }
 }
