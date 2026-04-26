@@ -2,11 +2,13 @@ import { ValidationError } from '../utils/errors.js';
 
 interface ReviewInput {
   rating?: number;
+  title?: string | null;
   comment?: string;
 }
 
 const MIN_COMMENT_LENGTH = 10;
 const MAX_COMMENT_LENGTH = 2000;
+const MAX_TITLE_LENGTH = 200;
 
 function validateRating(rating: number): void {
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
@@ -33,6 +35,16 @@ function validateComment(comment: string): void {
   }
 }
 
+function validateTitle(title: string | null | undefined): void {
+  if (title === null || title === undefined) {
+    return;
+  }
+
+  if (title.length > MAX_TITLE_LENGTH) {
+    throw new ValidationError(`title cannot exceed ${MAX_TITLE_LENGTH} characters`, 'title');
+  }
+}
+
 export function validateCreateReviewInput(input: ReviewInput): void {
   if (typeof input.rating !== 'number') {
     throw new ValidationError('rating is required', 'rating');
@@ -43,6 +55,8 @@ export function validateCreateReviewInput(input: ReviewInput): void {
     throw new ValidationError('comment is required', 'comment');
   }
   validateComment(input.comment);
+
+  validateTitle(input.title);
 }
 
 export function validateUpdateReviewInput(input: ReviewInput): void {
@@ -51,5 +65,8 @@ export function validateUpdateReviewInput(input: ReviewInput): void {
   }
   if (input.comment !== undefined) {
     validateComment(input.comment);
+  }
+  if (input.title !== undefined) {
+    validateTitle(input.title);
   }
 }
