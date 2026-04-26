@@ -7,13 +7,14 @@ import type {
 } from '../lib/models.js';
 import { mapProduct, mapProductSpec, mapReview } from '../lib/mappers.js';
 import { adminMutation } from '../utils/adminMutation.js';
+import { requireAdmin } from '../utils/authorization.js';
 import { handleDatabaseError } from '../utils/errors.js';
 import {
   validateCreateProductInput,
   validateUpdateProductInput,
 } from '../validators/product.js';
 import { pubsub } from '../lib/pubsub.js';
-import { sanitizeOptionalText } from '../utils/sanitization.js';
+import { sanitizeText, sanitizeOptionalText } from '../utils/sanitization.js';
 
 interface ProductFilterArgs {
   brandId?: string;
@@ -151,6 +152,7 @@ export const productResolvers = {
       args: { threshold?: number },
       ctx: GraphQLContext,
     ) => {
+      requireAdmin(ctx);
       const threshold = Math.max(args.threshold ?? 10, 0);
 
       const { count, error } = await ctx.supabase
@@ -227,6 +229,7 @@ export const productResolvers = {
     ) => {
       const sanitizedInput: ProductInput = {
         ...args.input,
+        ...(args.input.name !== undefined ? { name: sanitizeText(args.input.name) } : {}),
         description: sanitizeOptionalText(args.input.description),
       };
       validateCreateProductInput(sanitizedInput);
@@ -252,6 +255,7 @@ export const productResolvers = {
     ) => {
       const sanitizedInput: ProductInput = {
         ...args.input,
+        ...(args.input.name !== undefined ? { name: sanitizeText(args.input.name) } : {}),
         ...(args.input.description !== undefined
           ? { description: sanitizeOptionalText(args.input.description) }
           : {}),

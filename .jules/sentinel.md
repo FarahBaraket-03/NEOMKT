@@ -7,3 +7,8 @@
 **Vulnerability:** While primary fields (name, slug) were validated, secondary fields like URLs (`logoUrl`, `imageUrl`), `country`, and `icon` lacked validation, exposing the app to XSS (via `javascript:` URIs) and DoS (via oversized strings).
 **Learning:** Security validation must be comprehensive. Attackers will target "forgotten" fields that aren't core to the primary business logic but are still rendered in the UI or stored in the DB.
 **Prevention:** Audit all input interfaces for text-based fields and ensure every field has a length limit and, where applicable, format validation (e.g., URL protocol checks).
+
+## 2025-05-16 - Unprotected Administrative Queries
+**Vulnerability:** While administrative mutations were protected via the `adminMutation` wrapper, administrative queries (like `lowStockProductsCount`) lacked explicit authorization checks, exposing internal business data (inventory levels) to unauthenticated users.
+**Learning:** Authorization logic must be applied to both queries and mutations. The existence of a "privileged" wrapper for mutations can create a false sense of security for queries.
+**Prevention:** Always verify that every resolver that returns sensitive or non-public data has an explicit `requireAuth` or `requireAdmin` check at its entry point.
