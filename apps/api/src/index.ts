@@ -66,6 +66,11 @@ function collectSelectionMetrics(
 
   for (const selection of selectionSet.selections) {
     if (selection.kind === 'Field') {
+      const fieldName = selection.name.value;
+      if (fieldName === '__schema' || fieldName === '__type' || fieldName === '__typename') {
+        continue;
+      }
+
       metrics.fieldCount += 1;
       const childMetrics = collectSelectionMetrics(
         selection.selectionSet,
@@ -166,108 +171,6 @@ function getGraphQLRequestEntries(req: Request): GraphQLRequestBody[] {
   return body ? [body] : [];
 }
 
-function selectionContainsIntrospectionField(
-  selectionSet: SelectionSetNode | undefined,
-  fragments: Map<string, FragmentDefinitionNode>,
-  visitedFragments: Set<string>,
-): boolean {
-  if (!selectionSet) {
-    return false;
-  }
-
-  for (const selection of selectionSet.selections) {
-    if (selection.kind === 'Field') {
-      const fieldName = selection.name.value;
-      if (fieldName === '__schema' || fieldName === '__type') {
-        return true;
-      }
-
-      if (
-        selectionContainsIntrospectionField(
-          selection.selectionSet,
-          fragments,
-          visitedFragments,
-        )
-      ) {
-        return true;
-      }
-
-      continue;
-    }
-
-    if (selection.kind === 'InlineFragment') {
-      if (
-        selectionContainsIntrospectionField(
-          selection.selectionSet,
-          fragments,
-          visitedFragments,
-        )
-      ) {
-        return true;
-      }
-
-      continue;
-    }
-
-    if (selection.kind === 'FragmentSpread') {
-      const fragmentName = selection.name.value;
-      if (visitedFragments.has(fragmentName)) {
-        continue;
-      }
-
-      const fragment = fragments.get(fragmentName);
-      if (!fragment) {
-        continue;
-      }
-
-      const nextVisited = new Set(visitedFragments);
-      nextVisited.add(fragmentName);
-
-      if (
-        selectionContainsIntrospectionField(
-          fragment.selectionSet,
-          fragments,
-          nextVisited,
-        )
-      ) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-function isIntrospectionQuery(query: string, operationName?: string | null): boolean {
-  try {
-    const parsed = parse(query);
-    const fragments = new Map<string, FragmentDefinitionNode>();
-    const operations: OperationDefinitionNode[] = [];
-
-    for (const definition of parsed.definitions) {
-      if (definition.kind === 'FragmentDefinition') {
-        fragments.set(definition.name.value, definition);
-      }
-
-      if (definition.kind === 'OperationDefinition') {
-        operations.push(definition);
-      }
-    }
-
-    if (operations.length === 0) {
-      return false;
-    }
-
-    const targetOperations = operationName
-      ? operations.filter((operation) => operation.name?.value === operationName)
-      : operations;
-
-    return targetOperations.some((operation) =>
-      selectionContainsIntrospectionField(operation.selectionSet, fragments, new Set<string>()));
-  } catch {
-    return /__schema|__type/.test(query);
-  }
-}
 
 function isMutationQuery(query: string, operationName?: string | null): boolean {
   try {
@@ -317,10 +220,6 @@ function queryComplexityGuard(req: Request, res: Response, next: NextFunction): 
 
   for (const entry of entries) {
     if (typeof entry.query !== 'string') {
-      continue;
-    }
-
-    if (isIntrospectionQuery(entry.query, entry.operationName)) {
       continue;
     }
 
