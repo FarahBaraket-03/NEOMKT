@@ -7,3 +7,8 @@
 **Vulnerability:** While primary fields (name, slug) were validated, secondary fields like URLs (`logoUrl`, `imageUrl`), `country`, and `icon` lacked validation, exposing the app to XSS (via `javascript:` URIs) and DoS (via oversized strings).
 **Learning:** Security validation must be comprehensive. Attackers will target "forgotten" fields that aren't core to the primary business logic but are still rendered in the UI or stored in the DB.
 **Prevention:** Audit all input interfaces for text-based fields and ensure every field has a length limit and, where applicable, format validation (e.g., URL protocol checks).
+
+## 2024-10-30 - Query Complexity Guard Bypass via Introspection
+**Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
+**Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
+**Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
