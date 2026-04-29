@@ -13,7 +13,7 @@ import {
   validateUpdateProductInput,
 } from '../validators/product.js';
 import { pubsub } from '../lib/pubsub.js';
-import { sanitizeOptionalText } from '../utils/sanitization.js';
+import { sanitizeText, sanitizeOptionalText } from '../utils/sanitization.js';
 
 interface ProductFilterArgs {
   brandId?: string;
@@ -227,6 +227,7 @@ export const productResolvers = {
     ) => {
       const sanitizedInput: ProductInput = {
         ...args.input,
+        name: sanitizeText(args.input.name || ''),
         description: sanitizeOptionalText(args.input.description),
       };
       validateCreateProductInput(sanitizedInput);
@@ -252,6 +253,9 @@ export const productResolvers = {
     ) => {
       const sanitizedInput: ProductInput = {
         ...args.input,
+        ...(args.input.name !== undefined
+          ? { name: sanitizeText(args.input.name) }
+          : {}),
         ...(args.input.description !== undefined
           ? { description: sanitizeOptionalText(args.input.description) }
           : {}),
