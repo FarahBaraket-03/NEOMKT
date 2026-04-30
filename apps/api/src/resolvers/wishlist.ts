@@ -3,6 +3,7 @@ import type { WishlistItemRow } from '../lib/models.js';
 import { mapWishlistItem } from '../lib/mappers.js';
 import { requireAuth } from '../utils/authorization.js';
 import { handleDatabaseError } from '../utils/errors.js';
+import { validateUuid } from '../validators/uuid.js';
 
 interface WishlistArgs {
   productId: string;
@@ -34,6 +35,8 @@ export const wishlistResolvers = {
         return false;
       }
 
+      validateUuid(args.productId, 'productId');
+
       const { data, error } = await ctx.supabase
         .from('wishlist_items')
         .select('id')
@@ -51,6 +54,8 @@ export const wishlistResolvers = {
   Mutation: {
     addToWishlist: async (_parent: unknown, args: WishlistArgs, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
+
+      validateUuid(args.productId, 'productId');
 
       const { data: existingData, error: existingError } = await ctx.supabase
         .from('wishlist_items')
@@ -88,6 +93,8 @@ export const wishlistResolvers = {
       ctx: GraphQLContext,
     ) => {
       const user = requireAuth(ctx);
+
+      validateUuid(args.productId, 'productId');
 
       const { error } = await ctx.supabase
         .from('wishlist_items')
