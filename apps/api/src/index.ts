@@ -162,6 +162,11 @@ function getQueryMetrics(query: string, operationName?: string | null): QueryMet
 }
 
 function getGraphQLRequestEntries(req: Request): GraphQLRequestBody[] {
+  if (req.method === 'GET') {
+    const { query, operationName } = req.query as Record<string, string | undefined>;
+    return query ? [{ query, operationName }] : [];
+  }
+
   const body = req.body as GraphQLRequestBody | GraphQLRequestBody[] | undefined;
 
   if (Array.isArray(body)) {
@@ -198,21 +203,13 @@ function isMutationQuery(query: string, operationName?: string | null): boolean 
 }
 
 function isMutationRequest(req: Request): boolean {
-  const body = req.body as GraphQLRequestBody | GraphQLRequestBody[] | undefined;
+  const entries = getGraphQLRequestEntries(req);
 
-  if (Array.isArray(body)) {
-    return body.some((entry) =>
-      typeof entry?.query === 'string'
-        ? isMutationQuery(entry.query, entry.operationName)
-        : false,
-    );
-  }
-
-  if (typeof body?.query !== 'string') {
-    return false;
-  }
-
-  return isMutationQuery(body.query, body.operationName);
+  return entries.some((entry) =>
+    typeof entry?.query === 'string'
+      ? isMutationQuery(entry.query, entry.operationName)
+      : false,
+  );
 }
 
 function queryComplexityGuard(req: Request, res: Response, next: NextFunction): void {
