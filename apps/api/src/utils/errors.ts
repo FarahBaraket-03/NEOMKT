@@ -28,15 +28,18 @@ export class ValidationError extends GraphQLError {
 }
 
 export class DatabaseError extends GraphQLError {
+  override readonly originalError: any | undefined;
+
   constructor(
     message = 'An internal database error occurred',
-    public originalError?: unknown,
+    originalError?: any,
   ) {
     super(message, {
       extensions: {
         code: 'INTERNAL_SERVER_ERROR',
       },
     });
+    this.originalError = originalError;
   }
 }
 
