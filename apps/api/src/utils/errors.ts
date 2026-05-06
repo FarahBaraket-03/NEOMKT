@@ -30,7 +30,7 @@ export class ValidationError extends GraphQLError {
 export class DatabaseError extends GraphQLError {
   constructor(
     message = 'An internal database error occurred',
-    public originalError?: unknown,
+    originalError?: any,
   ) {
     super(message, {
       extensions: {
