@@ -168,9 +168,24 @@ function getGraphQLRequestEntries(req: Request): GraphQLRequestBody[] {
     return body;
   }
 
-  return body ? [body] : [];
-}
+  if (body?.query) {
+    return [body];
+  }
 
+  const queryParam = req.query.query;
+  const operationNameParam = req.query.operationName;
+
+  if (typeof queryParam === 'string') {
+    return [
+      {
+        query: queryParam,
+        operationName: typeof operationNameParam === 'string' ? operationNameParam : undefined,
+      },
+    ];
+  }
+
+  return [];
+}
 
 function isMutationQuery(query: string, operationName?: string | null): boolean {
   try {
@@ -198,21 +213,10 @@ function isMutationQuery(query: string, operationName?: string | null): boolean 
 }
 
 function isMutationRequest(req: Request): boolean {
-  const body = req.body as GraphQLRequestBody | GraphQLRequestBody[] | undefined;
-
-  if (Array.isArray(body)) {
-    return body.some((entry) =>
-      typeof entry?.query === 'string'
-        ? isMutationQuery(entry.query, entry.operationName)
-        : false,
-    );
-  }
-
-  if (typeof body?.query !== 'string') {
-    return false;
-  }
-
-  return isMutationQuery(body.query, body.operationName);
+  const entries = getGraphQLRequestEntries(req);
+  return entries.some((entry) =>
+    typeof entry?.query === 'string' ? isMutationQuery(entry.query, entry.operationName) : false,
+  );
 }
 
 function queryComplexityGuard(req: Request, res: Response, next: NextFunction): void {
