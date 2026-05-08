@@ -12,3 +12,8 @@
 **Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
 **Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
 **Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
+
+## 2026-05-08 - Complexity Guard and Rate Limit Bypass via HTTP GET
+**Vulnerability:** GraphQL query complexity guards and mutation rate limiters were only inspecting `req.body`, allowing an attacker to bypass these security controls by sending queries via HTTP GET request parameters (`?query=...`).
+**Learning:** Security middleware for GraphQL must be protocol-aware and inspect all possible input sources (body and query parameters) as defined by the GraphQL over HTTP specification.
+**Prevention:** Centralize GraphQL operation extraction logic (e.g., `getGraphQLRequestEntries`) to account for both POST (body) and GET (query string) requests, and ensure all security middleware uses this centralized logic.
