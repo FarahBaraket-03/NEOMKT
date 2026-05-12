@@ -285,6 +285,7 @@ export default function ApiDocsPage() {
     getLowStockProductsCount: {
       label: 'getLowStockProductsCount',
       operationType: 'query',
+      requiresAdmin: true,
       query: `query GetLowStockProductsCount($threshold: Int) {\n  lowStockProductsCount(threshold: $threshold)\n}`,
       defaultVariables: `{
   "threshold": 10

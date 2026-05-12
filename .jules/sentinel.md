@@ -12,3 +12,13 @@
 **Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
 **Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
 **Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
+
+## 2026-05-12 - Unauthorized Disclosure of Inventory Metrics
+**Vulnerability:** The `lowStockProductsCount` query was accessible to unauthenticated users, leaking sensitive business intelligence regarding inventory levels and potential supply chain gaps.
+**Learning:** Queries that aggregate or reveal internal status (even if they don't return full entity rows) must be evaluated for business impact. Aggregated data can be as sensitive as individual records.
+**Prevention:** Default to `requireAdmin(ctx)` for any query that provides metrics, counts of restricted statuses, or administrative telemetry.
+
+## 2026-05-12 - Wishlist Resource Exhaustion & Spam
+**Vulnerability:** The `addToWishlist` mutation lacked rate limiting, allowing an authenticated user to programmatically fill their wishlist (or many users to automate wishlist spam), leading to potential DB bloat or DoS.
+**Learning:** Any mutation that creates a record in the database should have a rate limit proportionate to expected human usage, especially for "low-stakes" actions like wishlisting which might be overlooked compared to reviews.
+**Prevention:** Implement sliding-window rate limiting in the resolver for all non-idempotent mutations, using a centralized pattern like `enforceReviewSubmissionRateLimit`.
