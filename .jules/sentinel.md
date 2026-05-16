@@ -12,3 +12,8 @@
 **Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
 **Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
 **Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
+
+## 2026-05-16 - Broken Function Level Authorization on Utility Queries
+**Vulnerability:** The `lowStockProductsCount` query was publicly accessible, allowing unauthenticated users to leak sensitive inventory levels.
+**Learning:** Utility or "count" queries are often overlooked during security audits compared to standard CRUD operations. If they expose sensitive business metrics (like stock levels), they must be protected by appropriate authorization checks.
+**Prevention:** Always apply the principle of least privilege to all GraphQL resolvers. Explicitly verify authorization for every query and mutation, especially those that aggregate or count sensitive data.
