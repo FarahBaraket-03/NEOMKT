@@ -12,3 +12,8 @@
 **Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
 **Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
 **Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
+
+## 2026-05-17 - Missing Authorization on Analytical Queries
+**Vulnerability:** Analytical queries like `lowStockProductsCount` were exposed without any authorization checks, allowing unauthenticated users to gain insights into internal inventory levels.
+**Learning:** While administrative mutations (CRUD) are often protected, read-only analytical or dashboard-level queries can be overlooked, leading to sensitive data exposure.
+**Prevention:** Audit all top-level Query fields. Any field that provides non-public business intelligence (inventory counts, user stats, etc.) must be protected with `requireAdmin` or appropriate role-based checks.
