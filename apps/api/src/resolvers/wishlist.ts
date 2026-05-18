@@ -2,10 +2,36 @@ import type { GraphQLContext } from '../types/context.js';
 import type { WishlistItemRow } from '../lib/models.js';
 import { mapWishlistItem } from '../lib/mappers.js';
 import { requireAuth } from '../utils/authorization.js';
-import { handleDatabaseError } from '../utils/errors.js';
+import { handleDatabaseError, ValidationError } from '../utils/errors.js';
+
+const MAX_WISHLIST_ITEMS_PER_HOUR = 30;
+const WISHLIST_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
 interface WishlistArgs {
   productId: string;
+}
+
+async function enforceWishlistRateLimit(
+  ctx: GraphQLContext,
+  userId: string,
+): Promise<void> {
+  const windowStart = new Date(Date.now() - WISHLIST_RATE_LIMIT_WINDOW_MS).toISOString();
+
+  const { count, error } = await ctx.supabase
+    .from('wishlist_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .gte('added_at', windowStart);
+
+  if (error) {
+    handleDatabaseError(error);
+  }
+
+  if ((count ?? 0) >= MAX_WISHLIST_ITEMS_PER_HOUR) {
+    throw new ValidationError(
+      `You can add up to ${MAX_WISHLIST_ITEMS_PER_HOUR} items to your wishlist per hour.`,
+    );
+  }
 }
 
 export const wishlistResolvers = {
@@ -66,6 +92,8 @@ export const wishlistResolvers = {
       if (existingData) {
         return mapWishlistItem(existingData as WishlistItemRow);
       }
+
+      await enforceWishlistRateLimit(ctx, user.id);
 
       const { data, error } = await ctx.supabase
         .from('wishlist_items')

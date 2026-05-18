@@ -12,3 +12,8 @@
 **Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
 **Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
 **Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
+
+## 2026-05-18 - Idempotency and Rate Limiting Order
+**Vulnerability:** Adding rate limits to mutations without considering idempotency can lead to a poor user experience or bypasses. If a rate limit is applied before checking if an operation has already been performed, legitimate retries might be blocked.
+**Learning:** For mutations that should be idempotent (like `addToWishlist`), performing the "already exists" check BEFORE the rate limit check ensures that redundant requests for the same resource don't consume the user's rate limit quota.
+**Prevention:** Always place idempotency checks before business-logic rate limiting in resolvers to ensure that repeated operations on the same entity are handled gracefully without penalizing the user.
