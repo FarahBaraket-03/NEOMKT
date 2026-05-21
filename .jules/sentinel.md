@@ -12,3 +12,8 @@
 **Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
 **Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
 **Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
+
+## 2026-05-21 - Missing Authorization on Sensitive Query Resolver
+**Vulnerability:** The `lowStockProductsCount` query resolver was missing an authorization check, allowing any unauthenticated or non-admin user to retrieve sensitive inventory information.
+**Learning:** While administrative mutations are often automatically protected by wrappers, query resolvers often require explicit authorization checks. It's easy to overlook queries that don't modify data but still expose sensitive business metrics.
+**Prevention:** Audit all resolvers that return non-public information (e.g., stock levels, financial data, user details) and ensure they call `requireAuth` or `requireAdmin` as appropriate.
