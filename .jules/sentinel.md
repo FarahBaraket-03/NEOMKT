@@ -12,3 +12,8 @@
 **Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
 **Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
 **Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
+
+## 2026-05-22 - Missing Authorization in Administrative Queries
+**Vulnerability:** The `lowStockProductsCount` query resolver was accessible to unauthenticated and non-admin users, exposing sensitive inventory metrics.
+**Learning:** While mutations often use the `adminMutation` wrapper, queries are often implemented manually. It's easy to forget authorization checks in queries that return "just a number" or "stats," but these can still leak sensitive business data.
+**Prevention:** Audit all Query resolvers to ensure that any data not intended for public consumption is protected by appropriate authorization helpers like `requireAuth` or `requireAdmin`.

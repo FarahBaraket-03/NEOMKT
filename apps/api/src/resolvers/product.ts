@@ -6,6 +6,7 @@ import type {
   ReviewRow,
 } from '../lib/models.js';
 import { mapProduct, mapProductSpec, mapReview } from '../lib/mappers.js';
+import { requireAdmin } from '../utils/authorization.js';
 import { adminMutation } from '../utils/adminMutation.js';
 import { handleDatabaseError } from '../utils/errors.js';
 import {
@@ -151,6 +152,7 @@ export const productResolvers = {
       args: { threshold?: number },
       ctx: GraphQLContext,
     ) => {
+      requireAdmin(ctx);
       const threshold = Math.max(args.threshold ?? 10, 0);
 
       const { count, error } = await ctx.supabase
