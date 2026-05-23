@@ -12,3 +12,8 @@
 **Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
 **Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
 **Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
+
+## 2026-05-23 - Missing Authorization on Sensitive Telemetry Endpoints
+**Vulnerability:** The `lowStockProductsCount` resolver was publicly accessible, allowing any user to query inventory telemetry and potentially probe stock levels through threshold brute-forcing.
+**Learning:** Business intelligence and telemetry endpoints are often overlooked in security audits as they don't directly modify data. However, they can leak sensitive competitive information or be used for reconnaissance.
+**Prevention:** Always apply the principle of least privilege to all resolvers, including read-only counts and statistics. Use `requireAdmin` or appropriate role-based checks for any endpoint exposing aggregate business data.

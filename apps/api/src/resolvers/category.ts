@@ -42,6 +42,7 @@ function sanitizeCategoryInput(input: CategoryInput): CategoryInput {
     ...(input.description !== undefined
       ? { description: sanitizeOptionalText(input.description) }
       : {}),
+    ...(input.icon !== undefined ? { icon: sanitizeOptionalText(input.icon) } : {}),
   };
 }
 
