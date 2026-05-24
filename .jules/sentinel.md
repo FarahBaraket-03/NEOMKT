@@ -12,3 +12,8 @@
 **Vulnerability:** The GraphQL query complexity guard was being bypassed by adding any introspection field (e.g., `__schema`) to a query. The guard's logic used `.some()` to detect introspection and would skip the entire complexity check if found, allowing an attacker to bundle a malicious high-complexity query with a single introspection field.
 **Learning:** Security middleware that "skips" checks based on input content must be extremely careful not to allow partial bypasses. It is safer to filter or ignore specific fields within the security logic rather than bypassing the entire check.
 **Prevention:** Instead of bypassing complexity guards for introspection queries, modify the complexity calculator to ignore introspection fields (`__schema`, `__type`, `__typename`) while still enforcing limits on the rest of the query.
+
+## 2024-05-24 - Unauthorized Disclosure of Inventory Metrics
+**Vulnerability:** The `lowStockProductsCount` query was accessible to unauthenticated users and lacked input validation on the `threshold` parameter, potentially leaking sensitive inventory data.
+**Learning:** Business intelligence and inventory metrics are sensitive data that must be protected with administrative authorization, even if they appear to be simple "count" queries.
+**Prevention:** Always apply `requireAdmin` to resolvers that expose aggregate business data or inventory levels, and implement strict input clamping to prevent data probing.
