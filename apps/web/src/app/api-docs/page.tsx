@@ -285,6 +285,7 @@ export default function ApiDocsPage() {
     getLowStockProductsCount: {
       label: 'getLowStockProductsCount',
       operationType: 'query',
+      requiresAdmin: true,
       query: `query GetLowStockProductsCount($threshold: Int) {\n  lowStockProductsCount(threshold: $threshold)\n}`,
       defaultVariables: `{
   "threshold": 10
@@ -294,8 +295,9 @@ export default function ApiDocsPage() {
           <p className="text-secondary font-mono mb-2"><span className="text-accent">type</span> <span className="text-white">Query</span> {'{'}</p>
           <p className="pl-4 font-mono text-sm text-mutedForeground">lowStockProductsCount(threshold: Int): <span className="text-white">Int</span></p>
           <p className="font-mono mb-4">{'}'}</p>
+          <p className="text-accentTertiary text-xs uppercase tracking-widest font-mono mb-2">ADMIN ONLY</p>
           <p className="text-mutedForeground text-xs leading-relaxed font-jetbrains">
-            Returns product count below a stock threshold.
+            Returns product count below a stock threshold. Requires administrative privileges.
           </p>
         </>
       ),
